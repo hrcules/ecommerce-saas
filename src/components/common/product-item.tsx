@@ -1,4 +1,5 @@
 import type { productTable, productVariantTable } from "@/db/schema";
+import { formatCentsToBRL } from "@/helpers/money";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -23,6 +24,9 @@ const ProductItem = ({ product }: ProductItemProps) => {
         <p className="truncate text-sm font-medium">{product.name}</p>
         <p className="text-muted-foreground truncate text-xs font-medium">
           {product.description}
+        </p>
+        <p className="truncate text-sm font-semibold">
+          {formatCentsToBRL(firstVariant.priceInCents)}
         </p>
       </div>
     </Link>
