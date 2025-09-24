@@ -16,7 +16,11 @@ const ProductList = ({ title, products }: ProductListProps) => {
       <h3 className="px-5 font-semibold">{title}</h3>
       <div className="flex w-full gap-4 overflow-x-auto px-5 [&::-webkit-scrollbar]:hidden">
         {products.map((product) => (
-          <ProductItem product={product} key={product.id} />
+          <ProductItem
+            product={product}
+            key={product.id}
+            textContainerClassName="w-full"
+          />
         ))}
       </div>
     </div>
