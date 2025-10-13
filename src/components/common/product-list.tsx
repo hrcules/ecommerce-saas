@@ -2,6 +2,7 @@
 
 import { productTable, type productVariantTable } from "@/db/schema";
 import ProductItem from "./product-item";
+import { useParams } from "next/navigation";
 
 interface ProductListProps {
   title: string;
