@@ -11,6 +11,7 @@ import {
 import { Button } from "../ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { getCart } from "@/actions/get-cart";
+import CartItem from "./cart-item";
 
 const Cart = () => {
   const { data: cart } = useQuery({
@@ -28,21 +29,17 @@ const Cart = () => {
         <SheetHeader>
           <SheetTitle>Carrinho</SheetTitle>
         </SheetHeader>
-        <div>
+        <div className="space-y-4 px-5">
           {cart?.items.map((item) => (
-            <div key={item.id} className="flex items-center gap-4">
-              <img
-                src={item.productVariant.imageUrl}
-                alt={item.productVariant.name}
-                className="h-16 w-16 rounded-md object-cover"
-              />
-              <div>
-                <p className="font-medium">{item.productVariant.name}</p>
-                <p className="text-muted-foreground text-sm">
-                  Quantidade: {item.quantity}
-                </p>
-              </div>
-            </div>
+            <CartItem
+              key={item.id}
+              id={item.id}
+              productName={item.productVariant.product.name}
+              productVariantName={item.productVariant.name}
+              productVariantImageUrl={item.productVariant.imageUrl}
+              productVariantPriceInCents={item.productVariant.priceInCents}
+              quantity={item.quantity}
+            />
           ))}
         </div>
       </SheetContent>
