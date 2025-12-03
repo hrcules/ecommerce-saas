@@ -15,12 +15,10 @@ import CartItem from "./cart-item";
 import { formatCentsToBRL } from "@/helpers/money";
 import { Separator } from "@radix-ui/react-separator";
 import { ScrollArea } from "../ui/scroll-area";
+import { useCart } from "@/hooks/queries/use-cart";
 
 const Cart = () => {
-  const { data: cart } = useQuery({
-    queryKey: ["cart"],
-    queryFn: () => getCart(),
-  });
+  const { data: cart } = useCart();
   return (
     <Sheet>
       <SheetTrigger asChild>
