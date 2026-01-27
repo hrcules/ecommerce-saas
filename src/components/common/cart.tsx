@@ -1,6 +1,16 @@
 "use client";
 
+import { Separator } from "@radix-ui/react-separator";
+import { useQuery } from "@tanstack/react-query";
 import { ShoppingBasketIcon } from "lucide-react";
+import Link from "next/link";
+
+import { getCart } from "@/actions/get-cart";
+import { formatCentsToBRL } from "@/helpers/money";
+import { useCart } from "@/hooks/queries/use-cart";
+
+import { Button } from "../ui/button";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -8,14 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-import { Button } from "../ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { getCart } from "@/actions/get-cart";
 import CartItem from "./cart-item";
-import { formatCentsToBRL } from "@/helpers/money";
-import { Separator } from "@radix-ui/react-separator";
-import { ScrollArea } from "../ui/scroll-area";
-import { useCart } from "@/hooks/queries/use-cart";
 
 const Cart = () => {
   const { data: cart } = useCart();
@@ -75,7 +78,9 @@ const Cart = () => {
                 <p>{formatCentsToBRL(cart?.totalPriceInCents ?? 0)}</p>
               </div>
 
-              <Button className="mt-5 rounded-full">Finalizar compra</Button>
+              <Button className="mt-5 rounded-full" asChild>
+                <Link href="/cart/identification">Finalizar Compra</Link>
+              </Button>
             </div>
           )}
         </div>

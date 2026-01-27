@@ -2,12 +2,12 @@ import { count } from "console";
 import { create } from "domain";
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   integer,
   pgTable,
   text,
-  uuid,
   timestamp,
-  boolean,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { email, number } from "zod";
 import { id } from "zod/v4/locales";

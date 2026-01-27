@@ -1,8 +1,9 @@
+import Image from "next/image";
+import Link from "next/link";
+
 import type { productTable, productVariantTable } from "@/db/schema";
 import { formatCentsToBRL } from "@/helpers/money";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
-import Link from "next/link";
 
 interface ProductItemProps {
   product: typeof productTable.$inferSelect & {

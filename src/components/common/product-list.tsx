@@ -1,8 +1,10 @@
 "use client";
 
-import { productTable, type productVariantTable } from "@/db/schema";
-import ProductItem from "./product-item";
 import { useParams } from "next/navigation";
+
+import { productTable, type productVariantTable } from "@/db/schema";
+
+import ProductItem from "./product-item";
 
 interface ProductListProps {
   title: string;

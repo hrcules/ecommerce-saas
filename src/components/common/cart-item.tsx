@@ -1,17 +1,17 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MinusIcon, PlusIcon, TrashIcon } from "lucide-react";
 import Image from "next/image";
-
-import { formatCentsToBRL } from "@/helpers/money";
-
-import { Button } from "../ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { removeProductFromCart } from "@/actions/remove-cart-product";
 import { toast } from "sonner";
-import { decreaseCartProductQuantity } from "@/actions/decrease-cart-product-quantity";
+
 import { addProductToCart } from "@/actions/add-cart-product";
-import { useRemoveProductFromCart } from "@/hooks/mutations/use-remove--product-from-cart";
+import { decreaseCartProductQuantity } from "@/actions/decrease-cart-product-quantity";
+import { removeProductFromCart } from "@/actions/remove-cart-product";
+import { formatCentsToBRL } from "@/helpers/money";
 import { useDecreaseCartProduct } from "@/hooks/mutations/use-decrease-cart-product";
 import { useIncreaseCartProduct } from "@/hooks/mutations/use-increase-cart-product";
+import { useRemoveProductFromCart } from "@/hooks/mutations/use-remove--product-from-cart";
+
+import { Button } from "../ui/button";
 
 interface CartItemProps {
   id: string;

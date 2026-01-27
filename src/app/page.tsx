@@ -1,11 +1,12 @@
+import { desc } from "drizzle-orm";
+import Image from "next/image";
+
 import CategorySelector from "@/components/common/category-selector";
+import Footer from "@/components/common/footer";
 import Header from "@/components/common/header";
 import ProductList from "@/components/common/product-list";
 import { db } from "@/db";
-import { desc } from "drizzle-orm";
-import { productTable, categoryTable } from "@/db/schema";
-import Image from "next/image";
-import Footer from "@/components/common/footer";
+import { categoryTable,productTable } from "@/db/schema";
 
 export default async function Home() {
   const products = await db.query.productTable.findMany({

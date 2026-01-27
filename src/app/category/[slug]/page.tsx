@@ -1,9 +1,10 @@
-import { db } from "@/db";
 import { eq } from "drizzle-orm";
-import { categoryTable, productTable } from "@/db/schema";
 import { notFound } from "next/navigation";
+
 import Header from "@/components/common/header";
 import ProductItem from "@/components/common/product-item";
+import { db } from "@/db";
+import { categoryTable, productTable } from "@/db/schema";
 
 interface CategoryPageProps {
   params: { slug: string };
