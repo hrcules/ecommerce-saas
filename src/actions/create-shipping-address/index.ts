@@ -10,6 +10,7 @@ import {
   CreateShippingAddressSchema,
   createShippingAddressSchema,
 } from "./schema";
+import { revalidatePath } from "next/cache";
 
 export const createShippingAddress = async (
   data: CreateShippingAddressSchema,
@@ -42,6 +43,8 @@ export const createShippingAddress = async (
       cpfOrCnpj: data.cpf,
     })
     .returning();
+
+  revalidatePath("/cart/identification");
 
   return shippingAddress;
 };
