@@ -1,11 +1,9 @@
 "use client";
 
 import { Separator } from "@radix-ui/react-separator";
-import { useQuery } from "@tanstack/react-query";
 import { ShoppingBasketIcon } from "lucide-react";
 import Link from "next/link";
 
-import { getCart } from "@/actions/get-cart";
 import { formatCentsToBRL } from "@/helpers/money";
 import { useCart } from "@/hooks/queries/use-cart";
 

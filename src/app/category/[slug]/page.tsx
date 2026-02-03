@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { categoryTable, productTable } from "@/db/schema";
 
 interface CategoryPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 const CategoryPage = async ({ params }: CategoryPageProps) => {

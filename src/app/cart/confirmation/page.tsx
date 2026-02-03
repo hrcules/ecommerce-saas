@@ -1,13 +1,10 @@
-import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import Footer from "@/components/common/footer";
 import Header from "@/components/common/header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
-import { shippingAddressTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import FinishOrderButton from "./components/finish-order-button";
 

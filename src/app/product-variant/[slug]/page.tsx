@@ -13,7 +13,7 @@ import ProductActions from "./components/product-actions";
 import VariantSelector from "./components/variant-selector";
 
 interface ProdutcVariantPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 const ProdutcVariantPage = async ({ params }: ProdutcVariantPageProps) => {

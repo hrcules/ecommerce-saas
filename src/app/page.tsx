@@ -6,7 +6,7 @@ import Footer from "@/components/common/footer";
 import Header from "@/components/common/header";
 import ProductList from "@/components/common/product-list";
 import { db } from "@/db";
-import { categoryTable,productTable } from "@/db/schema";
+import { productTable } from "@/db/schema";
 
 export default async function Home() {
   const products = await db.query.productTable.findMany({
