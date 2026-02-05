@@ -1,6 +1,6 @@
 "use client";
 
-import { LogInIcon, LogOutIcon, MenuIcon } from "lucide-react";
+import { LogInIcon, LogOutIcon, MenuIcon, House, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -16,6 +16,7 @@ import {
   SheetTrigger,
 } from "../ui/sheet";
 import Cart from "./cart";
+import { Separator } from "../ui/separator";
 
 const Header = () => {
   const { data: session } = authClient.useSession();
@@ -41,9 +42,9 @@ const Header = () => {
               <MenuIcon />
             </Button>
           </SheetTrigger>
-          <SheetContent>
+          <SheetContent className="rounded-l-[24px]">
             <SheetHeader>
-              <SheetTitle>Menu</SheetTitle>
+              <SheetTitle className="text-lg font-semibold">Menu</SheetTitle>
             </SheetHeader>
             <div className="px-5">
               {session?.user ? (
@@ -83,6 +84,25 @@ const Header = () => {
                   </Button>
                 </div>
               )}
+
+              <Separator />
+
+              <div className="mt-4 flex flex-col items-start justify-start">
+                <Button variant="ghost" asChild>
+                  <Link href="/">
+                    <House className="mr-2" />
+                    Inicio
+                  </Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/orders">
+                    <Truck className="mr-2" />
+                    Meus Pedidos
+                  </Link>
+                </Button>
+              </div>
+
+              <Separator className="mt-5" />
             </div>
           </SheetContent>
         </Sheet>
