@@ -1,6 +1,13 @@
 "use client";
 
-import { LogInIcon, LogOutIcon, MenuIcon, House, Truck } from "lucide-react";
+import {
+  LogInIcon,
+  LogOutIcon,
+  MenuIcon,
+  House,
+  Truck,
+  ShoppingBag,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -35,14 +42,22 @@ const Header = () => {
         <Image src="/logo.svg" alt="BEWEAR" width={100} height={26.14} />
       </Link>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 px-6">
+        <Cart />
+
+        <p className="text-accent-foreground">|</p>
+
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
-              <MenuIcon />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-accent-foreground"
+            >
+              <MenuIcon size={24} />
             </Button>
           </SheetTrigger>
-          <SheetContent className="rounded-l-[24px]">
+          <SheetContent className="rounded-l-[24px] px-1">
             <SheetHeader>
               <SheetTitle className="text-lg font-semibold">Menu</SheetTitle>
             </SheetHeader>
@@ -65,27 +80,24 @@ const Header = () => {
                         </span>
                       </div>
                     </div>
-
-                    <Button
-                      variant="outline"
-                      onClick={() => authClient.signOut()}
-                    >
-                      <LogOutIcon />
-                    </Button>
                   </div>
                 </>
               ) : (
-                <div className="flex items-center justify-between">
+                <div className="mb-6 flex items-center justify-between">
                   <h2 className="font-semibold">Olá, faça seu login!</h2>
-                  <Button size="icon" variant="outline" asChild>
+                  <Button
+                    variant="default"
+                    className="w-32 rounded-3xl"
+                    asChild
+                  >
                     <Link href="/authentication">
-                      <LogInIcon />
+                      Login <LogInIcon />
                     </Link>
                   </Button>
                 </div>
               )}
 
-              <Separator />
+              <Separator className="mt-6" />
 
               <div className="mt-4 flex flex-col items-start justify-start">
                 <Button variant="ghost" asChild>
@@ -100,14 +112,56 @@ const Header = () => {
                     Meus Pedidos
                   </Link>
                 </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/orders" className="text-base">
+                    <ShoppingBag className="mr-2" />
+                    Sacola
+                  </Link>
+                </Button>
               </div>
 
               <Separator className="mt-5" />
+
+              <div className="mt-4 flex flex-col items-start justify-start">
+                <Button variant="ghost" asChild>
+                  <Link href="/products/camisetas">Camisetas</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/products/bermudas-e-shorts">
+                    Bermuda & Shorts
+                  </Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/products/calcas">Calças</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/products/jaquetas-e-moletons">
+                    Jaquetas & Moletons
+                  </Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/products/tenis">Tênis</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/products/acessorios">Acessórios</Link>
+                </Button>
+              </div>
+              <Separator className="my-5" />
+              {session?.user && (
+                <>
+                  <Button
+                    variant="ghost"
+                    className="text-muted-foreground"
+                    onClick={() => authClient.signOut()}
+                  >
+                    <LogOutIcon />
+                    Sair da Conta
+                  </Button>
+                </>
+              )}
             </div>
           </SheetContent>
         </Sheet>
-
-        <Cart />
       </div>
     </header>
   );
