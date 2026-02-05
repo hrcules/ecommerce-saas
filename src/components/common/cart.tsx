@@ -1,7 +1,7 @@
 "use client";
 
 import { Separator } from "@radix-ui/react-separator";
-import { ShoppingBasketIcon } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 import { formatCentsToBRL } from "@/helpers/money";
@@ -23,8 +23,8 @@ const Cart = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon">
-          <ShoppingBasketIcon />
+        <Button variant="ghost" size="icon">
+          <ShoppingBag className="text-accent-foreground" size={24} />
         </Button>
       </SheetTrigger>
       <SheetContent>
