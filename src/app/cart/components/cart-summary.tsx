@@ -1,9 +1,7 @@
-import Image from "next/image";
-import React from "react";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatCentsToBRL } from "@/helpers/money";
+import CartSummaryItem from "./cart-summary-item";
 
 interface CartSummaryProps {
   subtotalInCents: number;
@@ -26,7 +24,7 @@ const CartSummary = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Resumo</CardTitle>
+        <CardTitle>Seu pedido</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex justify-between">
@@ -50,28 +48,21 @@ const CartSummary = ({
           <Separator />
         </div>
 
-        {products.map((product) => (
-          <div className="flex items-center justify-between" key={product.id}>
-            <div className="flex items-center gap-4">
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                width={78}
-                height={78}
-                className="rounded-lg"
-              />
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold">{product.name}</p>
-                <p className="text-muted-foreground text-xs font-medium">
-                  {product.variantName}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col items-end justify-center gap-2">
-              <p className="text-sm font-bold">
-                {formatCentsToBRL(product.priceInCents)}
-              </p>
-            </div>
+        {products.map((product, index) => (
+          <div key={product.id}>
+            {index !== 0 && (
+              <Separator className="my-5" key={`separator-${product.id}`} />
+            )}
+
+            <CartSummaryItem
+              id={product.id}
+              name={product.name}
+              variantName={product.variantName}
+              quantity={product.quantity}
+              imageUrl={product.imageUrl}
+              priceInCents={product.priceInCents}
+              key={product.id}
+            />
           </div>
         ))}
       </CardContent>

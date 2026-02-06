@@ -10,6 +10,7 @@ import FinishOrderButton from "./components/finish-order-button";
 
 import CartSummary from "../components/cart-summary";
 import { formatAddress } from "../helpers/address";
+import CartSteper from "../components/cart-steper";
 
 const ConfirmationPage = async () => {
   const session = await auth.api.getSession({
@@ -47,6 +48,7 @@ const ConfirmationPage = async () => {
     <div>
       <Header />
       <div className="space-y-4 px-5">
+        <CartSteper />
         <Card>
           <CardHeader>
             <CardTitle>Identificação</CardTitle>

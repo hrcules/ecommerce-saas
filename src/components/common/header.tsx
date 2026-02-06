@@ -52,7 +52,7 @@ const Header = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-accent-foreground"
+              className="text-accent-foreground cursor-pointer"
             >
               <MenuIcon size={24} />
             </Button>
