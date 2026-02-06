@@ -139,7 +139,7 @@ const Addresses = ({
             {addresses?.map((address) => (
               <Card key={address.id}>
                 <CardContent>
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-center space-x-5">
                     <RadioGroupItem value={address.id} id={address.id} />
                     <div className="flex-1">
                       <Label htmlFor={address.id} className="cursor-pointer">
@@ -155,7 +155,7 @@ const Addresses = ({
 
             <Card>
               <CardContent>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-5">
                   <RadioGroupItem value="add_new" id="add_new" />
                   <Label htmlFor="add_new">Adicionar novo endereço</Label>
                 </div>
@@ -168,12 +168,12 @@ const Addresses = ({
           <div className="mt-4">
             <Button
               onClick={handleGoToPayment}
-              className="w-full"
+              className="w-full rounded-full"
               disabled={updateCartShippingAddressMutation.isPending}
             >
               {updateCartShippingAddressMutation.isPending
                 ? "Processando..."
-                : "Ir para pagamento"}
+                : "Continuar com o pagamento"}
             </Button>
           </div>
         )}

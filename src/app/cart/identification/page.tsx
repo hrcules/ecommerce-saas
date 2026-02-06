@@ -10,6 +10,7 @@ import { auth } from "@/lib/auth";
 
 import CartSummary from "../components/cart-summary";
 import Addresses from "./components/addresses";
+import CartSteper from "../components/cart-steper";
 
 const IdentificationPage = async () => {
   const session = await auth.api.getSession({
@@ -47,6 +48,8 @@ const IdentificationPage = async () => {
     <div>
       <Header />
       <div className="space-y-4 px-5">
+        <CartSteper />
+
         <Addresses
           shippingAddresses={shippingAddresses}
           defaultShippingAddressId={cart.shippingAddress?.id || null}

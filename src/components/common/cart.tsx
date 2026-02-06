@@ -1,6 +1,5 @@
 "use client";
 
-import { Separator } from "@radix-ui/react-separator";
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
@@ -11,25 +10,29 @@ import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
 import CartItem from "./cart-item";
+import { Separator } from "../ui/separator";
 
 const Cart = () => {
   const { data: cart } = useCart();
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button className="cursor-pointer" variant="ghost" size="icon">
           <ShoppingBag className="text-accent-foreground" size={24} />
         </Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Carrinho</SheetTitle>
+          <SheetTitle className="flex items-center gap-2 text-lg font-semibold">
+            <ShoppingBag size={18} className="text-accent-foreground" /> Sacola
+          </SheetTitle>
         </SheetHeader>
         <div className="flex h-full flex-col px-5 pb-5">
           <div className="flex h-full max-h-full flex-col overflow-hidden">
@@ -55,30 +58,23 @@ const Cart = () => {
 
           {cart?.items && cart?.items.length > 0 && (
             <div className="flex flex-col gap-4">
-              <Separator />
-
-              <div className="flex items-center justify-between text-xs font-medium">
+              <div className="text-accent-foreground flex items-center justify-between text-[14px] font-medium">
                 <p>Subtotal</p>
                 <p>{formatCentsToBRL(cart?.totalPriceInCents ?? 0)}</p>
               </div>
 
-              <Separator />
+              <Separator className="mb-5" />
 
-              <div className="flex items-center justify-between text-xs font-medium">
-                <p>Entrega</p>
-                <p>GRÁTIS</p>
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between text-xs font-medium">
-                <p>Total</p>
-                <p>{formatCentsToBRL(cart?.totalPriceInCents ?? 0)}</p>
-              </div>
-
-              <Button className="mt-5 rounded-full" asChild>
+              <Button className="rounded-full" asChild>
                 <Link href="/cart/identification">Finalizar Compra</Link>
               </Button>
+              <SheetClose asChild>
+                <Button variant="ghost" className="rounded-full" asChild>
+                  <p className="cursor-pointer font-medium underline">
+                    Continuar comprando
+                  </p>
+                </Button>
+              </SheetClose>
             </div>
           )}
         </div>
