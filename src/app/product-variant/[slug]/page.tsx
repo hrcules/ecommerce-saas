@@ -52,7 +52,6 @@ const ProdutcVariantPage = async ({ params }: ProdutcVariantPageProps) => {
         </div>
 
         <div className="px-5">
-          {/* VARIANTS */}
           <VariantSelector
             selectedVariantSlug={productVariant.slug}
             variants={productVariant.product.variants}
@@ -60,7 +59,6 @@ const ProdutcVariantPage = async ({ params }: ProdutcVariantPageProps) => {
         </div>
 
         <div className="px-5">
-          {/* description */}
           <h2 className="text-lg font-semibold">
             {productVariant.product.name}
           </h2>
@@ -80,8 +78,6 @@ const ProdutcVariantPage = async ({ params }: ProdutcVariantPageProps) => {
         </div>
 
         <ProductList title="Você também pode gostar" products={likelyProduct} />
-
-        <Footer />
       </div>
     </>
   );

@@ -67,10 +67,6 @@ const IdentificationPage = async () => {
           }))}
         />
       </div>
-
-      <div className="mt-12">
-        <Footer />
-      </div>
     </div>
   );
 };

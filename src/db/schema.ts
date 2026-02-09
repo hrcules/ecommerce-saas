@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -223,12 +223,17 @@ export const orderStatus = pgEnum("order_status", [
 
 export const orderTable = pgTable("order", {
   id: uuid().primaryKey().defaultRandom(),
+
+  orderNumber: integer("order_number"),
+
   userId: text("user_id")
     .notNull()
     .references(() => userTable.id, { onDelete: "cascade" }),
+
   shippingAddressId: uuid("shipping_address_id")
     .notNull()
     .references(() => shippingAddressTable.id, { onDelete: "set null" }),
+
   recipientName: text().notNull(),
   street: text().notNull(),
   number: text().notNull(),
