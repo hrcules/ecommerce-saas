@@ -52,7 +52,6 @@ export default async function Home() {
         </div>
 
         <ProductList products={newlyCreatedProducts} title="Novos produtos" />
-        <Footer />
       </div>
     </>
   );

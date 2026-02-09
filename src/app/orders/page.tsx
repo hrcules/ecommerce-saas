@@ -8,7 +8,6 @@ import { orderTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 import Orders from "./components/orders";
-import Footer from "@/components/common/footer";
 
 const MyOrdersPage = async () => {
   const session = await auth.api.getSession({
@@ -40,6 +39,7 @@ const MyOrdersPage = async () => {
           orders={orders.map((order) => ({
             id: order.id,
             totalPriceInCents: order.totalPriceInCents,
+            orderNumber: order.orderNumber,
             status: order.status,
             createdAt: order.createdAt,
             items: order.items.map((item) => ({
@@ -53,7 +53,6 @@ const MyOrdersPage = async () => {
           }))}
         />
       </div>
-      <Footer />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { Poppins } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/providers/react-query";
+import Footer from "@/components/common/footer";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -20,14 +21,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${poppins.variable} antialiased`}>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+      <body
+        className={`${poppins.variable} flex min-h-screen flex-col antialiased`}
+      >
+        <ReactQueryProvider>
+          <main className="flex-1">{children}</main>
+        </ReactQueryProvider>
+
         <Toaster position="top-center" />
+        <Footer />
       </body>
     </html>
   );

@@ -18,6 +18,7 @@ interface OrdersProps {
   orders: Array<{
     id: string;
     totalPriceInCents: number;
+    orderNumber: number | null;
     status: (typeof orderTable.$inferSelect)["status"];
     createdAt: Date;
     items: Array<{
@@ -32,6 +33,10 @@ interface OrdersProps {
 }
 
 const Orders = ({ orders }: OrdersProps) => {
+  function formatOrderNumber(orderNumber: number): string {
+    return orderNumber.toString().padStart(4, "0");
+  }
+
   return (
     <div className="space-y-5">
       {orders.map((order) => (
@@ -45,50 +50,60 @@ const Orders = ({ orders }: OrdersProps) => {
                     {order.status === "pending" && (
                       <Badge variant="destructive">Pagamento pendente</Badge>
                     )}
+                    <p>Número do pedido</p>
+                    <p className="text-accent-foreground text-sm">
+                      {order.orderNumber &&
+                        `#${formatOrderNumber(order.orderNumber)}`}
+                    </p>
                     {order.status === "canceled" && (
                       <Badge variant="destructive">Cancelado</Badge>
                     )}
-                    <p>
-                      Pedido feito em{" "}
-                      {new Date(order.createdAt).toLocaleDateString("pt-BR")} às{" "}
-                      {new Date(order.createdAt).toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {order.items.map((product) => (
-                    <div
-                      className="flex items-center justify-between"
-                      key={product.id}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Image
-                          src={product.imageUrl}
-                          alt={product.productName}
-                          width={78}
-                          height={78}
-                          className="rounded-lg"
-                        />
-                        <div className="flex flex-col gap-1">
-                          <p className="text-sm font-semibold">
-                            {product.productName}
-                          </p>
-                          <p className="text-muted-foreground text-xs font-medium">
-                            {product.productVariantName} x {product.quantity}
+                  <p className="text-accent-foreground text-sm">
+                    Pedido realizado em:{" "}
+                    <span className="font-medium">
+                      {order.createdAt.toLocaleDateString()} às{" "}
+                      {order.createdAt.toLocaleTimeString()}
+                    </span>
+                  </p>
+
+                  <Separator className="my-4" />
+
+                  {order.items.map((product, index) => (
+                    <>
+                      <div
+                        className="my-5 flex items-center justify-between"
+                        key={product.id}
+                      >
+                        <div className="flex items-center gap-4">
+                          <Image
+                            src={product.imageUrl}
+                            alt={product.productName}
+                            width={78}
+                            height={78}
+                            className="rounded-lg"
+                          />
+                          <div className="flex flex-col gap-1">
+                            <p className="text-sm font-semibold">
+                              {product.productName}
+                            </p>
+                            <p className="text-muted-foreground text-xs font-medium">
+                              {product.productVariantName} x {product.quantity}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end justify-center gap-2">
+                          <p className="text-sm font-bold">
+                            {formatCentsToBRL(
+                              product.priceInCents * product.quantity,
+                            )}
                           </p>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end justify-center gap-2">
-                        <p className="text-sm font-bold">
-                          {formatCentsToBRL(
-                            product.priceInCents * product.quantity,
-                          )}
-                        </p>
-                      </div>
-                    </div>
+                      {index !== order.items.length - 1 && <Separator />}
+                    </>
                   ))}
                   <div className="py-5">
                     <Separator />
