@@ -1,6 +1,10 @@
 "use client";
 
-import { productTable, type productVariantTable } from "@/db/schema";
+import {
+  categoryTable,
+  productTable,
+  type productVariantTable,
+} from "@/db/schema";
 
 import ProductItem from "./product-item";
 
@@ -8,6 +12,7 @@ interface ProductListProps {
   title: string;
   products: (typeof productTable.$inferSelect & {
     variants: (typeof productVariantTable.$inferSelect)[];
+    category: typeof categoryTable.$inferSelect; // <--- ADICIONE ESTA LINHA OBRIGATORIAMENTE
   })[];
 }
 
@@ -28,4 +33,23 @@ const ProductList = ({ title, products }: ProductListProps) => {
   );
 };
 
-export default ProductList;
+const ProductGrid = ({ title, products }: ProductListProps) => {
+  return (
+    <div className="space-y-6 pb-10">
+      <h3 className="px-5 font-semibold">{title}</h3>
+      <div className="grid grid-cols-2 gap-4 px-5 md:grid-cols-3 lg:grid-cols-4">
+        {products.map((product) => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            // max-w-none garante que o texto não quebre em 200px,
+            // mas use a largura total da coluna do grid
+            textContainerClassName="w-full max-w-none"
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export { ProductList, ProductGrid };

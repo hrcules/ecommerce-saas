@@ -2,9 +2,8 @@ import { eq } from "drizzle-orm";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
-import Footer from "@/components/common/footer";
 import Header from "@/components/common/header";
-import ProductList from "@/components/common/product-list";
+import { ProductList } from "@/components/common/product-list";
 import { db } from "@/db";
 import { productTable, productVariantTable } from "@/db/schema";
 import { formatCentsToBRL } from "@/helpers/money";
@@ -12,17 +11,21 @@ import { formatCentsToBRL } from "@/helpers/money";
 import ProductActions from "./components/product-actions";
 import VariantSelector from "./components/variant-selector";
 
-interface ProdutcVariantPageProps {
-  params: Promise<{ slug: string }>;
+interface ProductPageProps {
+  params: Promise<{
+    slug: string;
+    productSlug: string;
+  }>;
 }
 
-const ProdutcVariantPage = async ({ params }: ProdutcVariantPageProps) => {
-  const { slug } = await params;
+const ProductPage = async ({ params }: ProductPageProps) => {
+  const { slug, productSlug } = await params;
+
   const productVariant = await db.query.productVariantTable.findFirst({
-    where: eq(productVariantTable.slug, slug),
+    where: eq(productVariantTable.slug, productSlug),
     with: {
       product: {
-        with: { variants: true },
+        with: { variants: true, category: true },
       },
     },
   });
@@ -33,7 +36,7 @@ const ProdutcVariantPage = async ({ params }: ProdutcVariantPageProps) => {
 
   const likelyProduct = await db.query.productTable.findMany({
     where: eq(productTable.categoryId, productVariant.product.categoryId),
-    with: { variants: true },
+    with: { variants: true, category: true },
   });
 
   return (
@@ -53,8 +56,9 @@ const ProdutcVariantPage = async ({ params }: ProdutcVariantPageProps) => {
 
         <div className="px-5">
           <VariantSelector
-            selectedVariantSlug={productVariant.slug}
+            currentSlug={productVariant.slug}
             variants={productVariant.product.variants}
+            categorySlug={slug}
           />
         </div>
 
@@ -83,4 +87,4 @@ const ProdutcVariantPage = async ({ params }: ProdutcVariantPageProps) => {
   );
 };
 
-export default ProdutcVariantPage;
+export default ProductPage;

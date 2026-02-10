@@ -2,22 +2,21 @@ import { desc } from "drizzle-orm";
 import Image from "next/image";
 
 import CategorySelector from "@/components/common/category-selector";
-import Footer from "@/components/common/footer";
 import Header from "@/components/common/header";
-import ProductList from "@/components/common/product-list";
+import { ProductList } from "@/components/common/product-list";
 import { db } from "@/db";
 import { productTable } from "@/db/schema";
 
 export default async function Home() {
   const products = await db.query.productTable.findMany({
-    with: { variants: true },
+    with: { variants: true, category: true },
   });
 
   const newlyCreatedProducts = await db.query.productTable.findMany({
     orderBy: [desc(productTable.createdAt)],
-    with: { variants: true },
+    with: { variants: true, category: true },
   });
-  const categotries = await db.query.categoryTable.findMany();
+  const categories = await db.query.categoryTable.findMany();
 
   return (
     <>
@@ -37,7 +36,7 @@ export default async function Home() {
         <ProductList products={products} title="Mais vendidos" />
 
         <div className="px-5">
-          <CategorySelector categories={categotries} />
+          <CategorySelector categories={categories} />
         </div>
 
         <div className="px-5">
