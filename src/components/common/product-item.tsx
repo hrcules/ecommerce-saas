@@ -1,13 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import type { productTable, productVariantTable } from "@/db/schema";
+import type {
+  categoryTable,
+  productTable,
+  productVariantTable,
+} from "@/db/schema";
 import { formatCentsToBRL } from "@/helpers/money";
 import { cn } from "@/lib/utils";
 
 interface ProductItemProps {
   product: typeof productTable.$inferSelect & {
     variants: (typeof productVariantTable.$inferSelect)[];
+    category: typeof categoryTable.$inferSelect;
   };
 
   textContainerClassName?: string;
@@ -15,9 +20,11 @@ interface ProductItemProps {
 
 const ProductItem = ({ product, textContainerClassName }: ProductItemProps) => {
   const firstVariant = product.variants[0];
+
+  if (!firstVariant) return null;
   return (
     <Link
-      href={`/product-variant/${firstVariant.slug}`}
+      href={`/category/${product.category.slug}/${firstVariant.slug}`}
       className="flex flex-col gap-4"
     >
       <Image
