@@ -124,26 +124,26 @@ const Header = () => {
 
               <div className="mt-4 flex flex-col items-start justify-start">
                 <Button variant="ghost" asChild>
-                  <Link href="/products/camisetas">Camisetas</Link>
+                  <Link href="/category/camisetas">Camisetas</Link>
                 </Button>
                 <Button variant="ghost" asChild>
-                  <Link href="/products/bermudas-e-shorts">
+                  <Link href="/category/bermudas-e-shorts">
                     Bermuda & Shorts
                   </Link>
                 </Button>
                 <Button variant="ghost" asChild>
-                  <Link href="/products/calcas">Calças</Link>
+                  <Link href="/category/calcas">Calças</Link>
                 </Button>
                 <Button variant="ghost" asChild>
-                  <Link href="/products/jaquetas-e-moletons">
+                  <Link href="/category/jaquetas-e-moletons">
                     Jaquetas & Moletons
                   </Link>
                 </Button>
                 <Button variant="ghost" asChild>
-                  <Link href="/products/tenis">Tênis</Link>
+                  <Link href="/category/tenis">Tênis</Link>
                 </Button>
                 <Button variant="ghost" asChild>
-                  <Link href="/products/acessorios">Acessórios</Link>
+                  <Link href="/category/acessorios">Acessórios</Link>
                 </Button>
               </div>
               <Separator className="my-5" />

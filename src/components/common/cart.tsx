@@ -18,9 +18,13 @@ import {
 } from "../ui/sheet";
 import CartItem from "./cart-item";
 import { Separator } from "../ui/separator";
+import Image from "next/image";
 
 const Cart = () => {
   const { data: cart } = useCart();
+
+  const isCartEmpty = !cart?.items || cart.items.length === 0;
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -34,8 +38,79 @@ const Cart = () => {
             <ShoppingBag size={18} className="text-accent-foreground" /> Sacola
           </SheetTitle>
         </SheetHeader>
+
         <div className="flex h-full flex-col px-5 pb-5">
-          <div className="flex h-full max-h-full flex-col overflow-hidden">
+          {isCartEmpty ? (
+            <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
+              <div className="bg-muted flex h-24 w-24 items-center justify-center rounded-full">
+                <Image
+                  src="/empty-cart.png"
+                  alt="Sacola vazia"
+                  height={0}
+                  width={0}
+                  sizes="100vw"
+                  className="h-auto w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">Sua sacola está vazia</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Parece que você ainda não escolheu nenhum produto. Que tal dar
+                  uma olhada nas nossas novidades?
+                </p>
+              </div>
+              <SheetClose asChild>
+                <Button className="mt-4 w-full rounded-full" asChild>
+                  <Link href="/">Começar a comprar</Link>
+                </Button>
+              </SheetClose>
+            </div>
+          ) : (
+            <>
+              <div className="flex h-full max-h-full flex-col overflow-hidden">
+                <ScrollArea className="h-full">
+                  <div className="flex h-full flex-col gap-8">
+                    {cart.items.map((item) => (
+                      <CartItem
+                        key={item.id}
+                        id={item.id}
+                        productName={item.productVariant.product.name}
+                        productVariantName={item.productVariant.name}
+                        productVariantId={item.productVariant.id}
+                        productVariantImageUrl={item.productVariant.imageUrl}
+                        productVariantPriceInCents={
+                          item.productVariant.priceInCents
+                        }
+                        quantity={item.quantity}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              <div className="mt-auto flex flex-col gap-4 pt-6">
+                <div className="text-accent-foreground flex items-center justify-between text-[14px] font-medium">
+                  <p>Subtotal</p>
+                  <p>{formatCentsToBRL(cart.totalPriceInCents ?? 0)}</p>
+                </div>
+
+                <Separator className="mb-5" />
+
+                <Button className="rounded-full" asChild>
+                  <Link href="/cart/identification">Finalizar Compra</Link>
+                </Button>
+                <SheetClose asChild>
+                  <Button variant="ghost" className="rounded-full" asChild>
+                    <p className="cursor-pointer font-medium underline">
+                      Continuar comprando
+                    </p>
+                  </Button>
+                </SheetClose>
+              </div>
+            </>
+          )}
+
+          {/* <div className="flex h-full max-h-full flex-col overflow-hidden">
             <ScrollArea className="h-full">
               <div className="flex h-full flex-col gap-8">
                 {cart?.items.map((item) => (
@@ -76,7 +151,7 @@ const Cart = () => {
                 </Button>
               </SheetClose>
             </div>
-          )}
+          )} */}
         </div>
       </SheetContent>
     </Sheet>
