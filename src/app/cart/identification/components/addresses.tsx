@@ -47,11 +47,15 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddressesProps {
   shippingAddresses: (typeof shippingAddressTable.$inferSelect)[];
   defaultShippingAddressId: string | null;
+  variantId?: string;
+  quantity?: number;
 }
 
 const Addresses = ({
   shippingAddresses,
   defaultShippingAddressId,
+  variantId,
+  quantity,
 }: AddressesProps) => {
   const router = useRouter();
   const [selectedAddress, setSelectedAddress] = useState<string | null>(
