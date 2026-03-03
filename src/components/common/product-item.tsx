@@ -16,6 +16,7 @@ interface ProductItemProps {
   };
 
   textContainerClassName?: string;
+  className?: string;
 }
 
 const ProductItem = ({ product, textContainerClassName }: ProductItemProps) => {
