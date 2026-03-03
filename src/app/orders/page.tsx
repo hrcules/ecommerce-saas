@@ -18,6 +18,7 @@ const MyOrdersPage = async () => {
   }
   const orders = await db.query.orderTable.findMany({
     where: eq(orderTable.userId, session?.user.id),
+    orderBy: (orderTable, { desc }) => desc(orderTable.createdAt),
     with: {
       items: {
         with: {
