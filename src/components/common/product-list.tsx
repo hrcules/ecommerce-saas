@@ -42,8 +42,6 @@ const ProductGrid = ({ title, products }: ProductListProps) => {
           <ProductItem
             key={product.id}
             product={product}
-            // max-w-none garante que o texto não quebre em 200px,
-            // mas use a largura total da coluna do grid
             textContainerClassName="w-full max-w-none"
           />
         ))}
