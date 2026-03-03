@@ -103,7 +103,9 @@ const IdentificationPage = async ({
 
         <Addresses
           shippingAddresses={shippingAddresses}
-          defaultShippingAddressId={cart.shippingAddress?.id || null}
+          defaultShippingAddressId={defaultAddressId}
+          variantId={variantId}
+          quantity={quantity ? Number(quantity) : undefined}
         />
         <CartSummary
           subtotalInCents={totalInCents}

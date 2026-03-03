@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // <-- Adicionado useSearchParams
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
@@ -47,6 +47,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddressesProps {
   shippingAddresses: (typeof shippingAddressTable.$inferSelect)[];
   defaultShippingAddressId: string | null;
+  // Mantemos as tipagens caso você opte por usá-las posteriormente
   variantId?: string;
   quantity?: number;
 }
@@ -54,10 +55,10 @@ interface AddressesProps {
 const Addresses = ({
   shippingAddresses,
   defaultShippingAddressId,
-  variantId,
-  quantity,
 }: AddressesProps) => {
   const router = useRouter();
+  const searchParams = useSearchParams(); // <-- Hook para capturar estado da URL
+
   const [selectedAddress, setSelectedAddress] = useState<string | null>(
     defaultShippingAddressId || null,
   );
@@ -92,6 +93,24 @@ const Addresses = ({
       form.reset();
       setSelectedAddress(newAddress.id);
 
+      // Verificação para o botão salvar endereço em fluxo de compra direta
+      const variantId = searchParams.get("variantId");
+      const quantity = searchParams.get("quantity");
+
+      if (variantId && quantity) {
+        // Se estiver no fluxo de compra direta, nós não associamos o endereço criado
+        // ao carrinho. Nós apenas avançamos com a URL.
+        const params = new URLSearchParams();
+        params.set("variantId", variantId);
+        params.set("quantity", quantity);
+        params.set("addressId", newAddress.id);
+
+        toast.success("Endereço selecionado para a entrega!");
+        router.push(`/cart/confirmation?${params.toString()}`);
+        return;
+      }
+
+      // Se não for compra direta, vinculamos o novo endereço ao carrinho
       await updateCartShippingAddressMutation.mutateAsync({
         shippingAddressId: newAddress.id,
       });
@@ -106,6 +125,22 @@ const Addresses = ({
     if (!selectedAddress || selectedAddress === "add_new") return;
 
     try {
+      // Capturamos os parâmetros da URL dinamicamente
+      const variantId = searchParams.get("variantId");
+      const quantity = searchParams.get("quantity");
+
+      // Se for Compra Direta, preservamos a URL e NÃO alteramos o banco
+      if (variantId && quantity) {
+        const params = new URLSearchParams();
+        params.set("variantId", variantId);
+        params.set("quantity", quantity);
+        params.set("addressId", selectedAddress);
+
+        router.push(`/cart/confirmation?${params.toString()}`);
+        return; // Retorno antecipado (Guard Clause) para não executar a mutation
+      }
+
+      // Se for o fluxo normal de Carrinho, o código original roda intacto
       await updateCartShippingAddressMutation.mutateAsync({
         shippingAddressId: selectedAddress,
       });
@@ -129,7 +164,7 @@ const Addresses = ({
           </div>
         ) : (
           <RadioGroup
-            value={selectedAddress}
+            value={selectedAddress || undefined}
             onValueChange={setSelectedAddress}
           >
             {addresses?.length === 0 && (
@@ -143,7 +178,9 @@ const Addresses = ({
             {addresses?.map((address) => (
               <Card key={address.id}>
                 <CardContent>
-                  <div className="flex items-center space-x-5">
+                  <div className="mt-4 flex items-center space-x-5">
+                    {" "}
+                    {/* Pequeno ajuste de margem aqui só para visual, opcional */}
                     <RadioGroupItem value={address.id} id={address.id} />
                     <div className="flex-1">
                       <Label htmlFor={address.id} className="cursor-pointer">
@@ -157,11 +194,13 @@ const Addresses = ({
               </Card>
             ))}
 
-            <Card>
+            <Card className="mt-4">
               <CardContent>
-                <div className="flex items-center space-x-5">
+                <div className="mt-4 flex items-center space-x-5">
                   <RadioGroupItem value="add_new" id="add_new" />
-                  <Label htmlFor="add_new">Adicionar novo endereço</Label>
+                  <Label htmlFor="add_new" className="cursor-pointer">
+                    Adicionar novo endereço
+                  </Label>
                 </div>
               </CardContent>
             </Card>
@@ -169,7 +208,7 @@ const Addresses = ({
         )}
 
         {selectedAddress && selectedAddress !== "add_new" && (
-          <div className="mt-4">
+          <div className="mt-6">
             <Button
               onClick={handleGoToPayment}
               className="w-full rounded-full"
@@ -186,7 +225,7 @@ const Addresses = ({
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="mt-4 space-y-4"
+              className="mt-6 space-y-4"
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
