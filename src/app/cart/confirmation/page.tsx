@@ -99,37 +99,48 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
   }
 
   return (
-    <div>
+    // 1. O contêiner pai garante 100% da altura da tela
+    <div className="flex min-h-screen flex-col">
       <Header />
-      <div className="space-y-4 px-5">
-        <CartSteper />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Identificação</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      {/* 2. O main empurra o Footer para baixo e tem o espaçamento padrão */}
+      <main className="flex-1 pt-6 pb-12">
+        {/* 3. A NOSSA CAIXA MÁGICA: Centraliza, limita a largura e aplica o padding */}
+        <div className="mx-auto w-full max-w-7xl space-y-6 px-5 md:px-10">
+          <CartSteper />
+
+          {/* Container flex para organizar os blocos e manter tudo alinhado */}
+          <div className="flex flex-col gap-6">
             <Card>
-              <CardContent>
-                <p className="text-sm">{formatAddress(shippingAddress)}</p>
+              <CardHeader>
+                <CardTitle>Identificação</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Card>
+                  {/* Adicionado um pt-6 para compensar a ausência do CardHeader neste card interno */}
+                  <CardContent className="pt-6">
+                    <p className="text-sm">{formatAddress(shippingAddress)}</p>
+                  </CardContent>
+                </Card>
+                <FinishOrderButton
+                  variantId={variantId}
+                  quantity={quantity ? Number(quantity) : undefined}
+                  addressId={addressId}
+                />
               </CardContent>
             </Card>
-            <FinishOrderButton
-              variantId={variantId}
-              quantity={quantity ? Number(quantity) : undefined}
-              addressId={addressId}
+
+            <CartSummary
+              subtotalInCents={totalInCents}
+              totalInCents={totalInCents}
+              products={products}
             />
-          </CardContent>
-        </Card>
-        <CartSummary
-          subtotalInCents={totalInCents}
-          totalInCents={totalInCents}
-          products={products}
-        />
-      </div>
-      <div className="mt-12">
-        <Footer />
-      </div>
+          </div>
+        </div>
+      </main>
+
+      {/* 4. O Footer fica fora do main, solto na base do "flex-col" principal */}
+      <Footer />
     </div>
   );
 };
