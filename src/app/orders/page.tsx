@@ -13,9 +13,11 @@ const MyOrdersPage = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+
   if (!session?.user.id) {
     redirect("/login");
   }
+
   const orders = await db.query.orderTable.findMany({
     where: eq(orderTable.userId, session?.user.id),
     orderBy: (orderTable, { desc }) => desc(orderTable.createdAt),
@@ -33,27 +35,31 @@ const MyOrdersPage = async () => {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="flex min-h-screen flex-col">
       <Header />
-      <div className="px-5">
-        <Orders
-          orders={orders.map((order) => ({
-            id: order.id,
-            totalPriceInCents: order.totalPriceInCents,
-            orderNumber: order.orderNumber,
-            status: order.status,
-            createdAt: order.createdAt,
-            items: order.items.map((item) => ({
-              id: item.id,
-              imageUrl: item.productVariant.imageUrl,
-              productName: item.productVariant.product.name,
-              productVariantName: item.productVariant.name,
-              priceInCents: item.productVariant.priceInCents,
-              quantity: item.quantity,
-            })),
-          }))}
-        />
-      </div>
+
+      <main className="flex-1 space-y-8 pt-6 pb-12">
+        <div className="mx-auto w-full max-w-7xl px-5 md:px-10">
+          <h1 className="mb-6 text-2xl font-bold">Meus Pedidos</h1>{" "}
+          <Orders
+            orders={orders.map((order) => ({
+              id: order.id,
+              totalPriceInCents: order.totalPriceInCents,
+              orderNumber: order.orderNumber,
+              status: order.status,
+              createdAt: order.createdAt,
+              items: order.items.map((item) => ({
+                id: item.id,
+                imageUrl: item.productVariant.imageUrl,
+                productName: item.productVariant.product.name,
+                productVariantName: item.productVariant.name,
+                priceInCents: item.productVariant.priceInCents,
+                quantity: item.quantity,
+              })),
+            }))}
+          />
+        </div>
+      </main>
     </div>
   );
 };

@@ -174,7 +174,7 @@ const Header = () => {
 
       <div className="mx-auto hidden max-w-7xl flex-col gap-6 px-10 py-6 md:flex">
         <div className="flex w-full items-center justify-between">
-          <div className="flex flex-1 items-center justify-start">
+          <div className="flex min-w-min flex-1 items-center justify-start gap-5">
             {session?.user ? (
               <div className="text-foreground flex items-center gap-2 text-sm font-semibold">
                 <Avatar>
@@ -194,6 +194,16 @@ const Header = () => {
                 <span>Olá, faça seu login!</span>
               </Link>
             )}
+            <Button
+              variant="ghost"
+              className="text-muted-foreground justify-start"
+              asChild
+            >
+              <Link href="/orders">
+                <Truck className="h-5 w-5" />
+                Meus Pedidos
+              </Link>
+            </Button>
           </div>
 
           <div className="flex flex-1 items-center justify-center">
@@ -209,9 +219,6 @@ const Header = () => {
           </div>
 
           <div className="flex flex-1 items-center justify-end gap-5">
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
-              <Search size={22} />
-            </button>
             <div className="bg-border h-5 w-px"></div> <Cart />
           </div>
         </div>
@@ -221,7 +228,7 @@ const Header = () => {
             <Link
               key={category.href}
               href={category.href}
-              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+              className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
             >
               {category.name}
             </Link>
