@@ -2,7 +2,7 @@ import { desc } from "drizzle-orm";
 import Image from "next/image";
 
 import CategorySelector from "@/components/common/category-selector";
-import Header from "@/components/common/header";
+import Header from "@/components/common/header/index";
 import { ProductList } from "@/components/common/product-list";
 import { db } from "@/db";
 import { productTable } from "@/db/schema";
@@ -19,39 +19,59 @@ export default async function Home() {
   const categories = await db.query.categoryTable.findMany();
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Header />
-      <div className="space-y-6">
-        <div className="px-5">
+
+      <main className="flex-1 space-y-8 pb-12">
+        <section className="mx-auto mt-6 w-full max-w-7xl px-5 md:px-10">
           <Image
             src="/banner-1.png"
             alt="Leve uma vida com estilo"
             height={0}
             width={0}
             sizes="100vw"
-            className="h-auto w-full"
+            className="h-auto w-full rounded-[24px] md:hidden"
+            priority
           />
-        </div>
-
-        <ProductList products={products} title="Mais vendidos" />
-
-        <div className="px-5">
-          <CategorySelector categories={categories} />
-        </div>
-
-        <div className="px-5">
           <Image
-            src="/banner-2.png"
+            src="/banner_desktop-1.png"
             alt="Leve uma vida com estilo"
             height={0}
             width={0}
             sizes="100vw"
-            className="h-auto w-full"
+            className="hidden h-auto w-full rounded-[32px] md:block"
+            priority
           />
-        </div>
+        </section>
+
+        <ProductList products={products} title="Mais vendidos" />
+        <ProductList products={products} title="Ofertas" />
+
+        <section className="mx-auto w-full max-w-7xl px-5 md:hidden">
+          <CategorySelector categories={categories} />
+        </section>
+
+        <section className="mx-auto w-full max-w-7xl px-5 md:px-10">
+          <Image
+            src="/banner-2.png"
+            alt="Conforto e Personalidade"
+            height={0}
+            width={0}
+            sizes="100vw"
+            className="h-auto w-full rounded-[24px] md:hidden"
+          />
+          <Image
+            src="/banner_desktop-1.png"
+            alt="Conforto e Personalidade"
+            height={0}
+            width={0}
+            sizes="100vw"
+            className="hidden h-auto w-full rounded-[32px] md:block"
+          />
+        </section>
 
         <ProductList products={newlyCreatedProducts} title="Novos produtos" />
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
