@@ -2,7 +2,7 @@ import { desc } from "drizzle-orm";
 import Image from "next/image";
 
 import CategorySelector from "@/components/common/category-selector";
-import Header from "@/components/common/header";
+import Header from "@/components/common/header/index";
 import { ProductList } from "@/components/common/product-list";
 import { db } from "@/db";
 import { productTable } from "@/db/schema";

@@ -7,36 +7,31 @@ import {
   House,
   Truck,
   ShoppingBag,
-  Search, // Adicionado para o Desktop
-  User, // Adicionado para o Desktop
+  User,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import type { categoryTable } from "@/db/schema";
 import { authClient } from "@/lib/auth-client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { Button } from "../../ui/button";
+import { Separator } from "../../ui/separator";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../ui/sheet";
-import Cart from "./cart";
+} from "../../ui/sheet";
+import Cart from "../cart";
 
-const CATEGORIES = [
-  { name: "Camisetas", href: "/category/camisetas" },
-  { name: "Bermuda & Shorts", href: "/category/bermudas-e-shorts" },
-  { name: "Calças", href: "/category/calcas" },
-  { name: "Jaquetas & Moletons", href: "/category/jaquetas-e-moletons" },
-  { name: "Tênis", href: "/category/tenis" },
-  { name: "Acessórios", href: "/category/acessorios" },
-];
+interface HeaderClientProps {
+  categories: (typeof categoryTable.$inferSelect)[];
+}
 
-const Header = () => {
+const HeaderClient = ({ categories }: HeaderClientProps) => {
   const { data: session } = authClient.useSession();
 
   const getInitials = (name?: string | null) => {
@@ -143,14 +138,17 @@ const Header = () => {
                 <Separator className="mt-5" />
 
                 <div className="mt-4 flex flex-col items-start justify-start">
-                  {CATEGORIES.map((category) => (
+                  {/* CATEGORIAS DINÂMICAS: Lendo do Banco e gerando o slug dinamicamente */}
+                  {categories.map((category) => (
                     <Button
-                      key={category.href}
+                      key={category.id}
                       variant="ghost"
                       className="w-full justify-start"
                       asChild
                     >
-                      <Link href={category.href}>{category.name}</Link>
+                      <Link href={`/category/${category.slug}`}>
+                        {category.name}
+                      </Link>
                     </Button>
                   ))}
                 </div>
@@ -200,7 +198,8 @@ const Header = () => {
               asChild
             >
               <Link href="/orders">
-                <Truck className="h-5 w-5" />
+                <Truck className="mr-2 h-5 w-5" />{" "}
+                {/* Adicionei margem no ícone para alinhar melhor */}
                 Meus Pedidos
               </Link>
             </Button>
@@ -224,10 +223,11 @@ const Header = () => {
         </div>
 
         <nav className="flex items-center justify-center gap-8">
-          {CATEGORIES.map((category) => (
+          {/* CATEGORIAS DINÂMICAS DESKTOP */}
+          {categories.map((category) => (
             <Link
-              key={category.href}
-              href={category.href}
+              key={category.id}
+              href={`/category/${category.slug}`}
               className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
             >
               {category.name}
@@ -239,4 +239,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default HeaderClient;
