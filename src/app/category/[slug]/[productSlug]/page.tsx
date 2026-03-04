@@ -40,50 +40,77 @@ const ProductPage = async ({ params }: ProductPageProps) => {
   });
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Header />
-      <div className="flex flex-col space-y-6">
-        <div className="px-5">
-          <Image
-            src={productVariant.imageUrl}
-            alt={productVariant.name}
-            sizes="100vw"
-            width={0}
-            height={0}
-            className="h-auto w-full rounded-3xl object-cover"
+
+      <main className="flex-1 pt-6 pb-12">
+        {/* ENVELOPE PADRÃO: Limita a largura do conteúdo principal e centraliza */}
+        <div className="mx-auto w-full max-w-7xl px-5 md:px-10">
+          {/* GRID MÁGICO: 1 coluna no celular, 2 colunas no desktop */}
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-12">
+            {/* COLUNA ESQUERDA: Imagem */}
+            <div className="flex w-full flex-col">
+              <Image
+                src={productVariant.imageUrl}
+                alt={productVariant.name}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                width={0}
+                height={0}
+                className="h-auto w-full rounded-3xl object-cover md:rounded-[32px]"
+                priority // Importantíssimo para a imagem do produto carregar rápido!
+              />
+            </div>
+
+            {/* COLUNA DIREITA: Detalhes do Produto */}
+            <div className="flex flex-col gap-6 md:py-6">
+              {/* Agrupamento: Título e Preço */}
+              <div className="flex flex-col gap-2">
+                <h1 className="text-2xl font-bold md:text-3xl lg:text-4xl">
+                  {productVariant.product.name}
+                </h1>
+                <p className="text-muted-foreground text-sm md:text-base">
+                  {productVariant.name}
+                </p>
+                <p className="mt-2 text-xl font-bold md:text-2xl">
+                  {formatCentsToBRL(productVariant.priceInCents)}
+                </p>
+              </div>
+
+              {/* Seletor de Variantes */}
+              <div className="flex flex-col gap-3">
+                <VariantSelector
+                  currentSlug={productVariant.slug}
+                  variants={productVariant.product.variants}
+                  categorySlug={slug}
+                />
+              </div>
+
+              {/* Ações (Adicionar à sacola, etc) */}
+              <ProductActions productVariantId={productVariant.id} />
+
+              {/* Descrição do Produto */}
+              <div className="mt-2 flex flex-col">
+                <p className="text-muted-foreground text-sm leading-relaxed md:text-base">
+                  {productVariant.product.description}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* PRODUTOS RELACIONADOS 
+            Nota Arquitetural: Ele fica FORA da div max-w-7xl acima, 
+            pois o componente ProductList que refatoramos antes já 
+            possui sua própria "caixa delimitadora" internamente! 
+        */}
+        <div className="mt-16 md:mt-24">
+          <ProductList
+            title="Você também pode gostar"
+            products={likelyProduct}
           />
         </div>
-
-        <div className="px-5">
-          <VariantSelector
-            currentSlug={productVariant.slug}
-            variants={productVariant.product.variants}
-            categorySlug={slug}
-          />
-        </div>
-
-        <div className="px-5">
-          <h2 className="text-lg font-semibold">
-            {productVariant.product.name}
-          </h2>
-          <h3 className="text-muted-foreground text-sm">
-            {productVariant.name}
-          </h3>
-
-          <h3 className="text-lg font-semibold">
-            {formatCentsToBRL(productVariant.priceInCents)}
-          </h3>
-        </div>
-
-        <ProductActions productVariantId={productVariant.id} />
-
-        <div className="px-5">
-          <p>{productVariant.product.description}</p>
-        </div>
-
-        <ProductList title="Você também pode gostar" products={likelyProduct} />
-      </div>
-    </>
+      </main>
+    </div>
   );
 };
 
