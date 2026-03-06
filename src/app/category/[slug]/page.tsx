@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
 import Header from "@/components/common/header/index";
@@ -15,8 +15,21 @@ interface CategoryPageProps {
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
 
+  const store = await db.query.storeTable.findFirst();
+
+  if (!store) {
+    return (
+      <div className="p-10 text-center font-bold">
+        Nenhuma loja configurada no sistema.
+      </div>
+    );
+  }
+
   const category = await db.query.categoryTable.findFirst({
-    where: eq(categoryTable.slug, slug),
+    where: and(
+      eq(categoryTable.slug, slug),
+      eq(categoryTable.storeId, store.id),
+    ),
     with: {
       products: {
         with: {

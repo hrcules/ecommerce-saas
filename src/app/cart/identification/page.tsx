@@ -96,17 +96,13 @@ const IdentificationPage = async ({
   }
 
   return (
-    // 1. O contêiner pai que garante que a página ocupe 100% da altura da tela
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      {/* 2. O main que empurra o conteúdo para preencher o espaço (flex-1) */}
       <main className="flex-1 pt-6 pb-12">
-        {/* 3. A NOSSA CAIXA MÁGICA: Centraliza, limita a largura e aplica o padding */}
         <div className="mx-auto w-full max-w-7xl space-y-6 px-5 md:px-10">
           <CartSteper />
 
-          {/* Agrupei os componentes do carrinho para manterem um espaçamento consistente */}
           <div className="flex flex-col gap-6">
             <Addresses
               shippingAddresses={shippingAddresses}

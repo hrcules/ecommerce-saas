@@ -93,13 +93,10 @@ const Addresses = ({
       form.reset();
       setSelectedAddress(newAddress.id);
 
-      // Verificação para o botão salvar endereço em fluxo de compra direta
       const variantId = searchParams.get("variantId");
       const quantity = searchParams.get("quantity");
 
       if (variantId && quantity) {
-        // Se estiver no fluxo de compra direta, nós não associamos o endereço criado
-        // ao carrinho. Nós apenas avançamos com a URL.
         const params = new URLSearchParams();
         params.set("variantId", variantId);
         params.set("quantity", quantity);
@@ -110,7 +107,6 @@ const Addresses = ({
         return;
       }
 
-      // Se não for compra direta, vinculamos o novo endereço ao carrinho
       await updateCartShippingAddressMutation.mutateAsync({
         shippingAddressId: newAddress.id,
       });
@@ -180,7 +176,6 @@ const Addresses = ({
                 <CardContent>
                   <div className="mt-4 flex items-center space-x-5">
                     {" "}
-                    {/* Pequeno ajuste de margem aqui só para visual, opcional */}
                     <RadioGroupItem value={address.id} id={address.id} />
                     <div className="flex-1">
                       <Label htmlFor={address.id} className="cursor-pointer">

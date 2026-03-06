@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 import { db } from "@/db";
 import { shippingAddressTable } from "@/db/schema";
@@ -10,7 +11,6 @@ import {
   CreateShippingAddressSchema,
   createShippingAddressSchema,
 } from "./schema";
-import { revalidatePath } from "next/cache";
 
 export const createShippingAddress = async (
   data: CreateShippingAddressSchema,
@@ -25,22 +25,22 @@ export const createShippingAddress = async (
     throw new Error("Unauthorized");
   }
 
+  // Cria o endereço vinculado apenas ao Usuário com os campos corretos da Fase 1
   const [shippingAddress] = await db
     .insert(shippingAddressTable)
     .values({
       userId: session.user.id,
-      recipientName: data.fullName,
-      street: data.address,
+      fullName: data.fullName,
+      address: data.address,
       number: data.number,
       complement: data.complement || null,
       city: data.city,
       state: data.state,
       neighborhood: data.neighborhood,
       zipCode: data.zipCode,
-      country: "Brasil",
       phone: data.phone,
       email: data.email,
-      cpfOrCnpj: data.cpf,
+      cpf: data.cpf,
     })
     .returning();
 
