@@ -10,11 +10,20 @@ export const getCart = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
+
+  const store = await db.query.storeTable.findFirst();
+
+  if (!store) {
+    throw new Error("Loja não encontrada no sistema.");
+  }
+
   const cart = await db.query.cartTable.findFirst({
-    where: (cart, { eq }) => eq(cart.userId, session.user.id),
+    where: (cart, { eq, and }) =>
+      and(eq(cart.userId, session.user.id), eq(cart.storeId, store.id)),
     with: {
       shippingAddress: true,
       items: {
@@ -28,13 +37,16 @@ export const getCart = async () => {
       },
     },
   });
+
   if (!cart) {
     const [newCart] = await db
       .insert(cartTable)
       .values({
         userId: session.user.id,
+        storeId: store.id,
       })
       .returning();
+
     return {
       ...newCart,
       items: [],
@@ -42,6 +54,7 @@ export const getCart = async () => {
       shippingAddress: null,
     };
   }
+
   return {
     ...cart,
     totalPriceInCents: cart.items.reduce(

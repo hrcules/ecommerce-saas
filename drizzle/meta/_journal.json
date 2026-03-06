@@ -15,6 +15,13 @@
       "when": 1770400962810,
       "tag": "0001_flowery_malcolm_colcord",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772650127325,
+      "tag": "0002_loud_kabuki",
+      "breakpoints": true
     }
   ]
 }

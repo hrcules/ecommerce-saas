@@ -1,7 +1,14 @@
 import crypto from "crypto";
+import { eq } from "drizzle-orm";
 
 import { db } from ".";
-import { categoryTable, productTable, productVariantTable } from "./schema";
+import {
+  categoryTable,
+  productTable,
+  productVariantTable,
+  storeTable,
+  user,
+} from "./schema";
 
 const productImages = {
   Mochila: {
@@ -257,22 +264,13 @@ const categories = [
     name: "Bermuda & Shorts",
     description: "Bermudas e shorts para todas as ocasiões",
   },
-  {
-    name: "Calças",
-    description: "Calças casuais e esportivas",
-  },
-  {
-    name: "Camisetas",
-    description: "Camisetas casuais e esportivas",
-  },
+  { name: "Calças", description: "Calças casuais e esportivas" },
+  { name: "Camisetas", description: "Camisetas casuais e esportivas" },
   {
     name: "Jaquetas & Moletons",
     description: "Jaquetas, corta-ventos e moletons",
   },
-  {
-    name: "Tênis",
-    description: "Tênis casuais e esportivos",
-  },
+  { name: "Tênis", description: "Tênis casuais e esportivos" },
 ];
 
 const products = [
@@ -537,17 +535,55 @@ const products = [
 ];
 
 async function main() {
-  console.log("🌱 Iniciando o seeding do banco de dados...");
+  console.log(
+    "🌱 Iniciando o seeding do banco de dados (SaaS Multi-tenant)...",
+  );
 
   try {
-    // Limpar dados existentes
+    // 1. Limpar os dados antigos em ordem de dependência (Cascata)
     console.log("🧹 Limpando dados existentes...");
     await db.delete(productVariantTable);
     await db.delete(productTable);
     await db.delete(categoryTable);
+    await db.delete(storeTable);
     console.log("✅ Dados limpos com sucesso!");
 
-    // Inserir categorias primeiro
+    // 2. Tentar buscar o usuário Admin. Se não existir, criamos um!
+    let [adminUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, "admin@bewear.com"));
+
+    if (!adminUser) {
+      console.log("👤 Criando Usuário Admin base...");
+      [adminUser] = await db
+        .insert(user)
+        .values({
+          id: crypto.randomUUID(), // Geramos o ID para a tabela de auth
+          name: "Hércules Admin",
+          email: "admin@bewear.com",
+          emailVerified: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+    } else {
+      console.log(`👤 Usuário Admin já existe: ${adminUser.email}`);
+    }
+
+    // 3. Criar a Loja (Tenant) e vincular ao Admin
+    console.log("🏪 Criando Loja (Tenant) principal...");
+    const [store] = await db
+      .insert(storeTable)
+      .values({
+        name: "BEWEAR",
+        slug: "bewear",
+        colorPrimary: "#8B5CF6", // Cor roxa original
+        ownerId: adminUser.id,
+      })
+      .returning();
+
+    // 4. Inserir categorias passando o storeId da Loja criada
     const categoryMap = new Map<string, string>();
 
     console.log("📂 Criando categorias...");
@@ -561,12 +597,13 @@ async function main() {
         id: categoryId,
         name: categoryData.name,
         slug: categorySlug,
+        storeId: store.id, // VÍNCULO SaaS ADICIONADO AQUI
       });
 
       categoryMap.set(categoryData.name, categoryId);
     }
 
-    // Inserir produtos
+    // 5. Inserir produtos passando o storeId da Loja criada
     for (const productData of products) {
       const productId = crypto.randomUUID();
       const productSlug = generateSlug(productData.name);
@@ -586,9 +623,10 @@ async function main() {
         slug: productSlug,
         description: productData.description,
         categoryId: categoryId,
+        storeId: store.id, // VÍNCULO SaaS ADICIONADO AQUI
       });
 
-      // Inserir variantes do produto
+      // 6. Inserir variantes do produto
       for (const variantData of productData.variants) {
         const variantId = crypto.randomUUID();
         const productKey = productData.name as keyof typeof productImages;
@@ -618,7 +656,7 @@ async function main() {
       } produtos com ${products.reduce(
         (acc, p) => acc + p.variants.length,
         0,
-      )} variantes.`,
+      )} variantes na Loja ${store.name}.`,
     );
   } catch (error) {
     console.error("❌ Erro durante o seeding:", error);

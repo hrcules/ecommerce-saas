@@ -1,10 +1,19 @@
 import { db } from "@/db";
 
-// Agora ele importa o filho que está na mesma pasta
 import HeaderClient from "./header-client";
+import { categoryTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 const Header = async () => {
-  const categories = await db.query.categoryTable.findMany();
+  const store = await db.query.storeTable.findFirst();
+
+  if (!store) {
+    return null;
+  }
+
+  const categories = await db.query.categoryTable.findMany({
+    where: eq(categoryTable.storeId, store.id),
+  });
 
   return <HeaderClient categories={categories} />;
 };

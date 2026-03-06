@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -21,6 +21,16 @@ interface ProductPageProps {
 const ProductPage = async ({ params }: ProductPageProps) => {
   const { slug, productSlug } = await params;
 
+  const store = await db.query.storeTable.findFirst();
+
+  if (!store) {
+    return (
+      <div className="p-10 text-center font-bold">
+        Nenhuma loja configurada no sistema.
+      </div>
+    );
+  }
+
   const productVariant = await db.query.productVariantTable.findFirst({
     where: eq(productVariantTable.slug, productSlug),
     with: {
@@ -30,12 +40,15 @@ const ProductPage = async ({ params }: ProductPageProps) => {
     },
   });
 
-  if (!productVariant) {
+  if (!productVariant || productVariant.product.storeId !== store.id) {
     return notFound();
   }
 
   const likelyProduct = await db.query.productTable.findMany({
-    where: eq(productTable.categoryId, productVariant.product.categoryId),
+    where: and(
+      eq(productTable.categoryId, productVariant.product.categoryId),
+      eq(productTable.storeId, store.id),
+    ),
     with: { variants: true, category: true },
   });
 
