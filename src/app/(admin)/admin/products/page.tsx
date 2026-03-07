@@ -121,8 +121,10 @@ export default async function AdminProductsPage() {
                             {formatCentsToBRL(basePrice)}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <Button variant="ghost" size="sm">
-                              Editar
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link href={`/admin/products/${product.id}`}>
+                                Editar
+                              </Link>
                             </Button>
                           </td>
                         </tr>

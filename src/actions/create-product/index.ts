@@ -96,7 +96,7 @@ export async function createProductAction(formData: FormData) {
       priceInCents,
       imageUrl,
       color: "única",
-      // Se a sua tabela tiver campo storeId aqui, adicione: storeId: store.id
+      size: "única",
     });
   });
 
