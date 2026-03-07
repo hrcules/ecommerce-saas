@@ -7,6 +7,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import { size } from "zod";
 
 // --- AUTHENTICATION TABLES (Better Auth) ---
 
@@ -148,6 +149,7 @@ export const productVariantTable = pgTable("product_variant", {
   productId: uuid("product_id")
     .notNull()
     .references(() => productTable.id, { onDelete: "cascade" }),
+  size: text("size").notNull().default("Única"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
