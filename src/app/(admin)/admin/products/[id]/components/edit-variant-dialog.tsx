@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, Plus, UploadCloud, X } from "lucide-react";
+import { Loader2, Pencil, UploadCloud, X } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -14,21 +14,32 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createVariantAction } from "@/actions/create-variant";
+import { updateVariantAction } from "@/actions/update-variant";
 import { ColorCombobox } from "@/components/ui/color-combobox";
 
-interface CreateVariantDialogProps {
+interface EditVariantDialogProps {
   productId: string;
   existingColors: string[];
+  variant: {
+    id: string;
+    color: string;
+    size: string;
+    priceInCents: number;
+    stock: number;
+    imageUrl: string;
+  };
 }
 
-export function CreateVariantDialog({
+export function EditVariantDialog({
   productId,
   existingColors,
-}: CreateVariantDialogProps) {
+  variant,
+}: EditVariantDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    variant.imageUrl,
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,24 +52,18 @@ export function CreateVariantDialog({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedFile) {
-      alert("Por favor, selecione uma imagem para esta variação.");
-      return;
-    }
-
     const formData = new FormData(e.currentTarget);
     formData.set("productId", productId);
-    formData.set("image", selectedFile);
+    formData.set("variantId", variant.id);
+    if (selectedFile) formData.set("image", selectedFile);
 
     startTransition(async () => {
       try {
-        await createVariantAction(formData);
-        setIsOpen(false); // Fecha o modal se deu tudo certo
-        setImagePreview(null);
-        setSelectedFile(null);
+        await updateVariantAction(formData);
+        setIsOpen(false);
       } catch (error) {
         console.error(error);
-        alert("Erro ao criar a variação.");
+        alert("Erro ao atualizar a variação.");
       }
     });
   };
@@ -66,14 +71,18 @@ export function CreateVariantDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="mr-2 h-4 w-4" /> Adicionar Variação
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-primary h-8 w-8"
+        >
+          <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[500px] md:min-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Nova Variação de Produto</DialogTitle>
+          <DialogTitle>Editar Variação</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -85,6 +94,7 @@ export function CreateVariantDialog({
                 name="price"
                 type="number"
                 step="0.01"
+                defaultValue={(variant.priceInCents / 100).toFixed(2)}
                 required
                 disabled={isPending}
               />
@@ -96,7 +106,7 @@ export function CreateVariantDialog({
                 name="stock"
                 type="number"
                 min="0"
-                defaultValue="0"
+                defaultValue={variant.stock}
                 required
                 disabled={isPending}
               />
@@ -105,20 +115,27 @@ export function CreateVariantDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="color">Cor (Ex: Verde, Bege)</Label>
+              <Label htmlFor="color">Cor</Label>
               <ColorCombobox
                 existingColors={existingColors}
+                defaultValue={variant.color}
                 disabled={isPending}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="size">Tamanho (Ex: P, M, 42)</Label>
-              <Input id="size" name="size" required disabled={isPending} />
+              <Label htmlFor="size">Tamanho</Label>
+              <Input
+                id="size"
+                name="size"
+                defaultValue={variant.size}
+                required
+                disabled={isPending}
+              />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Imagem da Variação</Label>
+            <Label>Imagem da Variação (Opcional)</Label>
             <div className="relative mt-2 flex justify-center rounded-lg border border-dashed px-6 py-6">
               {imagePreview ? (
                 <div className="relative h-32 w-32">
@@ -146,12 +163,12 @@ export function CreateVariantDialog({
                 <div className="text-center">
                   <UploadCloud className="text-muted-foreground mx-auto h-8 w-8" />
                   <label
-                    htmlFor="variant-image"
+                    htmlFor={`edit-image-${variant.id}`}
                     className="text-primary mt-2 block cursor-pointer text-sm font-semibold hover:underline"
                   >
-                    Escolher Foto
+                    Escolher Nova Foto
                     <input
-                      id="variant-image"
+                      id={`edit-image-${variant.id}`}
                       type="file"
                       className="sr-only"
                       accept="image/*"
@@ -175,7 +192,7 @@ export function CreateVariantDialog({
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar Variação
+              Salvar Alterações
             </Button>
           </div>
         </form>

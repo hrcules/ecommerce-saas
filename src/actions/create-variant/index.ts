@@ -18,13 +18,15 @@ export async function createVariantAction(formData: FormData) {
   if (!session?.user) throw new Error("Não autorizado");
 
   const productId = formData.get("productId") as string;
-  const name = formData.get("name") as string;
   const color = formData.get("color") as string;
   const size = formData.get("size") as string;
   const priceInput = formData.get("price") as string;
+  const stockInput = formData.get("stock") as string;
   const imageFile = formData.get("image") as File | null;
 
-  if (!productId || !name || !color || !size || !priceInput || !imageFile) {
+  const name = color;
+
+  if (!productId || !color || !size || !priceInput || !imageFile) {
     throw new Error(
       "Preencha todos os campos obrigatórios e envie uma imagem.",
     );
@@ -74,6 +76,7 @@ export async function createVariantAction(formData: FormData) {
     color,
     size,
     priceInCents,
+    stock: parseInt(stockInput || "0"),
     imageUrl,
     slug: variantSlug,
   });

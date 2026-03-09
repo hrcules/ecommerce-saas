@@ -7,6 +7,12 @@ import { storeTable } from "@/db/schema";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "admin",
+};
+
 export default async function AdminLayout({
   children,
 }: {

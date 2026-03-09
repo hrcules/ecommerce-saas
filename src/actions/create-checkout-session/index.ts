@@ -66,5 +66,5 @@ export const createCheckoutSession = async (
       };
     }),
   });
-  return checkoutSession;
+  return { checkoutUrl: checkoutSession.url };
 };
