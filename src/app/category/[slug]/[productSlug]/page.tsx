@@ -79,9 +79,9 @@ const ProductPage = async ({ params }: ProductPageProps) => {
                 <p className="text-muted-foreground text-sm md:text-base">
                   {productVariant.name}
                 </p>
-                <p className="mt-2 text-xl font-bold md:text-2xl">
+                {/* <p className="mt-2 text-xl font-bold md:text-2xl">
                   {formatCentsToBRL(productVariant.priceInCents)}
-                </p>
+                </p> */}
               </div>
 
               <div className="flex flex-col gap-3">
@@ -92,7 +92,11 @@ const ProductPage = async ({ params }: ProductPageProps) => {
                 />
               </div>
 
-              <ProductActions productVariantId={productVariant.id} />
+              <ProductActions
+                variants={productVariant.product.variants.filter(
+                  (v) => v.color === productVariant.color,
+                )}
+              />
 
               <div className="mt-2 flex flex-col">
                 <p className="text-muted-foreground text-sm leading-relaxed md:text-base">

@@ -150,6 +150,7 @@ export const productVariantTable = pgTable("product_variant", {
     .notNull()
     .references(() => productTable.id, { onDelete: "cascade" }),
   size: text("size").notNull().default("Única"),
+  stock: integer("stock").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

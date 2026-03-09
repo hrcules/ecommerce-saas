@@ -15,12 +15,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createVariantAction } from "@/actions/create-variant";
+import { ColorCombobox } from "@/components/ui/color-combobox";
 
 interface CreateVariantDialogProps {
   productId: string;
+  existingColors: string[];
 }
 
-export function CreateVariantDialog({ productId }: CreateVariantDialogProps) {
+export function CreateVariantDialog({
+  productId,
+  existingColors,
+}: CreateVariantDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -66,17 +71,13 @@ export function CreateVariantDialog({ productId }: CreateVariantDialogProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] md:min-w-[600px]">
         <DialogHeader>
           <DialogTitle>Nova Variação de Produto</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome (Ex: Camiseta)</Label>
-              <Input id="name" name="name" required disabled={isPending} />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="price">Preço Específico (R$)</Label>
               <Input
@@ -88,12 +89,27 @@ export function CreateVariantDialog({ productId }: CreateVariantDialogProps) {
                 disabled={isPending}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="stock">Quantidade em Estoque</Label>
+              <Input
+                id="stock"
+                name="stock"
+                type="number"
+                min="0"
+                defaultValue="0"
+                required
+                disabled={isPending}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="color">Cor (Ex: Preto, Azul)</Label>
-              <Input id="color" name="color" required disabled={isPending} />
+              <Label htmlFor="color">Cor (Ex: Verde, Bege)</Label>
+              <ColorCombobox
+                existingColors={existingColors}
+                disabled={isPending}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="size">Tamanho (Ex: P, M, 42)</Label>

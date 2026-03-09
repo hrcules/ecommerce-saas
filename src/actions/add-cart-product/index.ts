@@ -32,6 +32,12 @@ export const addProductToCart = async (data: AddProductToCartSchema) => {
     throw new Error("Variante do produto não encontrada");
   }
 
+  if (productVariant.stock < data.quantity) {
+    throw new Error(
+      `Estoque insuficiente. Temos apenas ${productVariant.stock} unidades disponíveis.`,
+    );
+  }
+
   const cart = await db.query.cartTable.findFirst({
     where: and(
       eq(cartTable.userId, session.user.id),
@@ -60,10 +66,18 @@ export const addProductToCart = async (data: AddProductToCartSchema) => {
   });
 
   if (cartItem) {
+    const newQuantity = cartItem.quantity + data.quantity;
+
+    if (productVariant.stock < newQuantity) {
+      throw new Error(
+        `Você já tem ${cartItem.quantity} no carrinho. Estoque máximo é ${productVariant.stock}.`,
+      );
+    }
+
     await db
       .update(cartItemTable)
       .set({
-        quantity: cartItem.quantity + data.quantity,
+        quantity: newQuantity,
       })
       .where(eq(cartItemTable.id, cartItem.id));
     return;
