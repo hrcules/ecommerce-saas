@@ -14,6 +14,7 @@ import { formatCentsToBRL } from "@/helpers/money";
 import { CreateVariantDialog } from "./components/create-variant-dialog";
 import { EditProductDialog } from "./components/edit-product-dialog";
 import { DeleteVariantButton } from "./components/delete-variant-button";
+import { EditVariantDialog } from "./components/edit-variant-dialog";
 
 interface EditProductPageProps {
   params: Promise<{
@@ -186,6 +187,11 @@ export default async function EditProductPage({
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
+                          <EditVariantDialog
+                            productId={product.id}
+                            existingColors={existingColors}
+                            variant={variant}
+                          />
                           <DeleteVariantButton
                             variantId={variant.id}
                             productId={product.id}

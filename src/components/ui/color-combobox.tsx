@@ -22,14 +22,16 @@ import {
 interface ColorComboboxProps {
   existingColors: string[];
   disabled?: boolean;
+  defaultValue?: string;
 }
 
 export function ColorCombobox({
   existingColors,
   disabled,
+  defaultValue,
 }: ColorComboboxProps) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState(defaultValue || "");
   const [inputValue, setInputValue] = React.useState("");
 
   // Montamos a lista de opções combinando as existentes com o que o usuário está digitando
