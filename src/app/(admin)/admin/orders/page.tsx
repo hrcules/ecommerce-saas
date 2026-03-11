@@ -45,14 +45,12 @@ export default async function AdminOrdersPage({
   const conditions = [eq(orderTable.storeId, store.id)];
 
   if (start) {
-    const startDate = new Date(start);
-    startDate.setHours(0, 0, 0, 0);
+    const startDate = new Date(`${start}T00:00:00`);
     conditions.push(gte(orderTable.createdAt, startDate));
   }
 
   if (end) {
-    const endDate = new Date(end);
-    endDate.setHours(23, 59, 59, 999);
+    const endDate = new Date(`${end}T23:59:59.999`);
     conditions.push(lte(orderTable.createdAt, endDate));
   }
 
