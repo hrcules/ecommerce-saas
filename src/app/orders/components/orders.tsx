@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 
 import {
@@ -13,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { orderTable } from "@/db/schema";
 import { formatCentsToBRL } from "@/helpers/money";
+import { translateOrderStatus } from "@/helpers/orders-status"; // <-- Importamos o seu helper!
 
 interface OrdersProps {
   orders: Array<{
@@ -37,6 +39,21 @@ const Orders = ({ orders }: OrdersProps) => {
     return orderNumber.toString().padStart(4, "0");
   }
 
+  // Função para definir a cor do Badge dinamicamente
+  function getBadgeVariant(status: string) {
+    switch (status.toLowerCase()) {
+      case "pending":
+      case "canceled":
+        return "destructive"; // Vermelho
+      case "refunded":
+        return "secondary"; // Cinza claro
+      case "processing":
+        return "outline"; // Borda simples
+      default:
+        return "default"; // Preto/Primário (Paid, Shipped, Delivered)
+    }
+  }
+
   return (
     <div className="space-y-5">
       {orders.map((order) => (
@@ -45,19 +62,17 @@ const Orders = ({ orders }: OrdersProps) => {
             <Accordion type="single" collapsible key={order.id}>
               <AccordionItem value="item-1">
                 <AccordionTrigger>
-                  <div className="flex flex-col gap-1">
-                    {order.status === "paid" && <Badge>Pago</Badge>}
-                    {order.status === "pending" && (
-                      <Badge variant="destructive">Pagamento pendente</Badge>
-                    )}
-                    <p>Número do pedido</p>
+                  <div className="flex flex-col items-start gap-1">
+                    {/* A MÁGICA ACONTECE AQUI: Texto e Cor Dinâmicos! */}
+                    <Badge variant={getBadgeVariant(order.status)}>
+                      {translateOrderStatus(order.status)}
+                    </Badge>
+
+                    <p className="mt-2">Número do pedido</p>
                     <p className="text-accent-foreground text-sm">
                       {order.orderNumber &&
                         `#${formatOrderNumber(order.orderNumber)}`}
                     </p>
-                    {order.status === "canceled" && (
-                      <Badge variant="destructive">Cancelado</Badge>
-                    )}
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -72,11 +87,9 @@ const Orders = ({ orders }: OrdersProps) => {
                   <Separator className="my-4" />
 
                   {order.items.map((product, index) => (
-                    <>
-                      <div
-                        className="my-5 flex items-center justify-between"
-                        key={product.id}
-                      >
+                    // React.Fragment usado para podermos passar a propriedade "key" corretamente
+                    <React.Fragment key={product.id}>
+                      <div className="my-5 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <Image
                             src={product.imageUrl}
@@ -103,8 +116,9 @@ const Orders = ({ orders }: OrdersProps) => {
                         </div>
                       </div>
                       {index !== order.items.length - 1 && <Separator />}
-                    </>
+                    </React.Fragment>
                   ))}
+
                   <div className="py-5">
                     <Separator />
                   </div>
