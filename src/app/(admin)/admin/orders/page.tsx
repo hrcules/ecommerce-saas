@@ -6,9 +6,9 @@ import { db } from "@/db";
 import { orderTable, storeTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { formatCentsToBRL } from "@/helpers/money";
-import { translateOrderStatus } from "@/helpers/orders-status";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OrderStatusSelector } from "./components/order-status-selector";
 
 import OrdersFilter from "./components/orders-filter";
 
@@ -106,9 +106,11 @@ export default async function AdminOrdersPage({
                         <p className="text-lg font-bold">
                           #{order.orderNumber}
                         </p>
-                        <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs font-bold tracking-wider uppercase">
-                          {translateOrderStatus(order.status)}
-                        </span>
+                        {/* A MÁGICA ACONTECE AQUI: O nosso dropdown interativo! */}
+                        <OrderStatusSelector
+                          orderId={order.id}
+                          currentStatus={order.status}
+                        />
                       </div>
                       <p className="text-muted-foreground text-sm">
                         {new Date(order.createdAt).toLocaleDateString("pt-BR", {

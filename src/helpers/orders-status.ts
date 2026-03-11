@@ -6,7 +6,6 @@ export const translateOrderStatus = (status: string) => {
     shipped: "Enviado",
     delivered: "Entregue",
     canceled: "Cancelado",
-    refunded: "Reembolsado",
   };
 
   return statusMap[status.toLowerCase()] || status;
