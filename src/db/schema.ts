@@ -7,7 +7,6 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { size } from "zod";
 
 // --- AUTHENTICATION TABLES (Better Auth) ---
 
@@ -66,9 +65,18 @@ export const verification = pgTable("verification", {
 export const storeTable = pgTable("store", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  slug: text("slug").notNull().unique(), // Ex: "bewear", "nike", etc.
+  slug: text("slug").notNull().unique(),
+
   logoUrl: text("logo_url"),
-  colorPrimary: text("color_primary").default("#8B5CF6").notNull(), // Cor padrão (Roxo)
+  banner1DesktopUrl: text("banner1_desktop_url"),
+  banner1MobileUrl: text("banner1_mobile_url"),
+  banner2DesktopUrl: text("banner2_desktop_url"),
+  banner2MobileUrl: text("banner2_mobile_url"),
+  colorPrimary: text("color_primary").default("#8B5CF6").notNull(),
+
+  instagramUrl: text("instagram_url"),
+  whatsapp: text("whatsapp"),
+
   ownerId: text("owner_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

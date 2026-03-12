@@ -28,6 +28,7 @@ export default async function Home() {
     orderBy: [desc(productTable.createdAt)],
     with: { variants: true, category: true },
   });
+
   const categories = await db.query.categoryTable.findMany({
     where: eq(categoryTable.storeId, store.id),
   });
@@ -37,10 +38,11 @@ export default async function Home() {
       <Header />
 
       <main className="flex-1 space-y-8 pb-12">
+        {/* === BANNER PRINCIPAL (CARROSSEL 1) === */}
         <section className="mx-auto mt-6 w-full max-w-7xl px-5 md:px-10">
           <Image
-            src="/banner-1.png"
-            alt="Leve uma vida com estilo"
+            src={store.banner1MobileUrl || "/banner-1.png"}
+            alt={`Banner Mobile ${store.name}`}
             height={0}
             width={0}
             sizes="100vw"
@@ -48,8 +50,8 @@ export default async function Home() {
             priority
           />
           <Image
-            src="/banner_desktop-1.png"
-            alt="Leve uma vida com estilo"
+            src={store.banner1DesktopUrl || "/banner_desktop-1.png"}
+            alt={`Banner Desktop ${store.name}`}
             height={0}
             width={0}
             sizes="100vw"
@@ -65,18 +67,19 @@ export default async function Home() {
           <CategorySelector categories={categories} />
         </section>
 
+        {/* === BANNER SECUNDÁRIO (CARROSSEL 2) === */}
         <section className="mx-auto w-full max-w-7xl px-5 md:px-10">
           <Image
-            src="/banner-2.png"
-            alt="Conforto e Personalidade"
+            src={store.banner2MobileUrl || "/banner-2.png"}
+            alt={`Banner Secundário Mobile ${store.name}`}
             height={0}
             width={0}
             sizes="100vw"
             className="h-auto w-full rounded-[24px] md:hidden"
           />
           <Image
-            src="/banner_desktop-1.png"
-            alt="Conforto e Personalidade"
+            src={store.banner2DesktopUrl || "/banner_desktop-1.png"}
+            alt={`Banner Secundário Desktop ${store.name}`}
             height={0}
             width={0}
             sizes="100vw"

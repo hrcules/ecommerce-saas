@@ -12,7 +12,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-import type { categoryTable } from "@/db/schema";
+// Importamos a storeTable para tipagem
+import type { categoryTable, storeTable } from "@/db/schema";
 import { authClient } from "@/lib/auth-client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
@@ -29,9 +30,10 @@ import Cart from "../cart";
 
 interface HeaderClientProps {
   categories: (typeof categoryTable.$inferSelect)[];
+  store: typeof storeTable.$inferSelect; // Recebendo a loja do servidor
 }
 
-const HeaderClient = ({ categories }: HeaderClientProps) => {
+const HeaderClient = ({ categories, store }: HeaderClientProps) => {
   const { data: session } = authClient.useSession();
 
   const getInitials = (name?: string | null) => {
@@ -44,9 +46,23 @@ const HeaderClient = ({ categories }: HeaderClientProps) => {
 
   return (
     <header className="w-full bg-white">
+      {/* ======================= HEADER MOBILE ======================= */}
       <div className="flex items-center justify-between p-5 md:hidden">
         <Link href="/">
-          <Image src="/logo.svg" alt="BEWEAR" width={100} height={26.14} />
+          {/* Lógica Dinâmica da Logo (Mobile) */}
+          {store.logoUrl ? (
+            <Image
+              src={store.logoUrl}
+              alt={store.name}
+              width={100}
+              height={26}
+              className="max-h-[26px] object-contain"
+            />
+          ) : (
+            <span className="text-primary text-xl font-bold tracking-tight">
+              {store.name}
+            </span>
+          )}
         </Link>
 
         <div className="flex items-center gap-3">
@@ -138,7 +154,6 @@ const HeaderClient = ({ categories }: HeaderClientProps) => {
                 <Separator className="mt-5" />
 
                 <div className="mt-4 flex flex-col items-start justify-start">
-                  {/* CATEGORIAS DINÂMICAS: Lendo do Banco e gerando o slug dinamicamente */}
                   {categories.map((category) => (
                     <Button
                       key={category.id}
@@ -170,6 +185,7 @@ const HeaderClient = ({ categories }: HeaderClientProps) => {
         </div>
       </div>
 
+      {/* ======================= HEADER DESKTOP ======================= */}
       <div className="mx-auto hidden max-w-7xl flex-col gap-6 px-10 py-6 md:flex">
         <div className="flex w-full items-center justify-between">
           <div className="flex min-w-min flex-1 items-center justify-start gap-5">
@@ -198,22 +214,26 @@ const HeaderClient = ({ categories }: HeaderClientProps) => {
               asChild
             >
               <Link href="/orders">
-                <Truck className="mr-2 h-5 w-5" />{" "}
-                {/* Adicionei margem no ícone para alinhar melhor */}
-                Meus Pedidos
+                <Truck className="mr-2 h-5 w-5" /> Meus Pedidos
               </Link>
             </Button>
           </div>
 
           <div className="flex flex-1 items-center justify-center">
             <Link href="/">
-              <Image
-                src="/logo.svg"
-                alt="BEWEAR"
-                width={140}
-                height={36}
-                className="h-auto w-auto"
-              />
+              {store.logoUrl ? (
+                <Image
+                  src={store.logoUrl}
+                  alt={store.name}
+                  width={120}
+                  height={26}
+                  className="h-auto object-contain"
+                />
+              ) : (
+                <span className="text-primary text-2xl font-bold tracking-tight">
+                  {store.name}
+                </span>
+              )}
             </Link>
           </div>
 
@@ -223,7 +243,6 @@ const HeaderClient = ({ categories }: HeaderClientProps) => {
         </div>
 
         <nav className="flex items-center justify-center gap-8">
-          {/* CATEGORIAS DINÂMICAS DESKTOP */}
           {categories.map((category) => (
             <Link
               key={category.id}
