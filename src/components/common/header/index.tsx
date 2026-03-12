@@ -1,8 +1,8 @@
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
+import { categoryTable } from "@/db/schema";
 
 import HeaderClient from "./header-client";
-import { categoryTable } from "@/db/schema";
-import { eq } from "drizzle-orm";
 
 const Header = async () => {
   const store = await db.query.storeTable.findFirst();
@@ -15,7 +15,8 @@ const Header = async () => {
     where: eq(categoryTable.storeId, store.id),
   });
 
-  return <HeaderClient categories={categories} />;
+  // AQUI: Passamos a loja (store) inteira como prop para o cliente!
+  return <HeaderClient categories={categories} store={store} />;
 };
 
 export default Header;

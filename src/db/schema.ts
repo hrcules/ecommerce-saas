@@ -7,7 +7,6 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { size } from "zod";
 
 // --- AUTHENTICATION TABLES (Better Auth) ---
 
@@ -69,8 +68,10 @@ export const storeTable = pgTable("store", {
   slug: text("slug").notNull().unique(),
 
   logoUrl: text("logo_url"),
-  banner1Url: text("banner1_url"),
-  banner2Url: text("banner2_url"),
+  banner1DesktopUrl: text("banner1_desktop_url"),
+  banner1MobileUrl: text("banner1_mobile_url"),
+  banner2DesktopUrl: text("banner2_desktop_url"),
+  banner2MobileUrl: text("banner2_mobile_url"),
   colorPrimary: text("color_primary").default("#8B5CF6").notNull(),
 
   instagramUrl: text("instagram_url"),

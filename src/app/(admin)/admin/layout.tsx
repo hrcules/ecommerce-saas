@@ -67,6 +67,13 @@ export default async function AdminLayout({
           >
             <Link href="/admin/orders">Pedidos</Link>
           </Button>
+          <Button
+            variant="ghost"
+            className="text-muted-foreground w-full justify-start"
+            asChild
+          >
+            <Link href="/admin/settings">Configurações</Link>
+          </Button>
         </nav>
       </aside>
 

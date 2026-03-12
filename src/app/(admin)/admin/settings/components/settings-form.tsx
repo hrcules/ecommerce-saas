@@ -1,0 +1,407 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Image as ImageIcon,
+  Palette,
+  UploadCloud,
+  X,
+  Link as LinkIcon,
+  Loader2,
+} from "lucide-react";
+import Image from "next/image";
+import { toast } from "sonner";
+
+import { updateStoreSettingsAction } from "@/actions/update-store-settings";
+import {
+  updateStoreSettingsSchema,
+  type UpdateStoreSettingsInput,
+} from "@/actions/update-store-settings/schema";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+
+interface SettingsFormProps {
+  initialData: {
+    name: string;
+    colorPrimary: string;
+    logoUrl: string | null;
+    banner1DesktopUrl: string | null;
+    banner1MobileUrl: string | null;
+    banner2DesktopUrl: string | null;
+    banner2MobileUrl: string | null;
+    instagramUrl: string | null;
+    whatsapp: string | null;
+  };
+}
+
+export function SettingsForm({ initialData }: SettingsFormProps) {
+  const [isPending, startTransition] = useTransition();
+
+  const [logoPreview, setLogoPreview] = useState(initialData.logoUrl);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+
+  const [b1DeskPreview, setB1DeskPreview] = useState(
+    initialData.banner1DesktopUrl,
+  );
+  const [b1DeskFile, setB1DeskFile] = useState<File | null>(null);
+  const [b1MobPreview, setB1MobPreview] = useState(
+    initialData.banner1MobileUrl,
+  );
+  const [b1MobFile, setB1MobFile] = useState<File | null>(null);
+
+  const [b2DeskPreview, setB2DeskPreview] = useState(
+    initialData.banner2DesktopUrl,
+  );
+  const [b2DeskFile, setB2DeskFile] = useState<File | null>(null);
+  const [b2MobPreview, setB2MobPreview] = useState(
+    initialData.banner2MobileUrl,
+  );
+  const [b2MobFile, setB2MobFile] = useState<File | null>(null);
+
+  const form = useForm<UpdateStoreSettingsInput>({
+    resolver: zodResolver(updateStoreSettingsSchema),
+    defaultValues: {
+      name: initialData.name,
+      colorPrimary: initialData.colorPrimary,
+      instagramUrl: initialData.instagramUrl || "",
+      whatsapp: initialData.whatsapp || "",
+    },
+  });
+
+  const onSubmit = (data: UpdateStoreSettingsInput) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("colorPrimary", data.colorPrimary);
+    if (data.instagramUrl) formData.append("instagramUrl", data.instagramUrl);
+    if (data.whatsapp) formData.append("whatsapp", data.whatsapp);
+
+    if (logoFile) formData.append("logoFile", logoFile);
+    if (!logoPreview && !logoFile) formData.append("removeLogo", "true");
+
+    if (b1DeskFile) formData.append("b1DesktopFile", b1DeskFile);
+    if (!b1DeskPreview && !b1DeskFile) formData.append("removeB1D", "true");
+
+    if (b1MobFile) formData.append("b1MobileFile", b1MobFile);
+    if (!b1MobPreview && !b1MobFile) formData.append("removeB1M", "true");
+
+    if (b2DeskFile) formData.append("b2DesktopFile", b2DeskFile);
+    if (!b2DeskPreview && !b2DeskFile) formData.append("removeB2D", "true");
+
+    if (b2MobFile) formData.append("b2MobileFile", b2MobFile);
+    if (!b2MobPreview && !b2MobFile) formData.append("removeB2M", "true");
+
+    startTransition(async () => {
+      try {
+        await updateStoreSettingsAction(formData);
+        toast.success("Configurações salvas com sucesso!");
+      } catch {
+        toast.error("Erro ao salvar as configurações.");
+      }
+    });
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Identidade Visual */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" /> Identidade Visual
+            </CardTitle>
+            <CardDescription>
+              Nome da loja e cor principal do tema.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome da Loja</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Minha Loja"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="colorPrimary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cor Principal</FormLabel>
+                  <FormControl>
+                    <div className="flex gap-3">
+                      <Input
+                        type="color"
+                        className="h-10 w-14 cursor-pointer p-1"
+                        disabled={isPending}
+                        {...field}
+                      />
+                      <Input
+                        placeholder="#8B5CF6"
+                        disabled={isPending}
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Mídias da Vitrine */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5" /> Imagens da Vitrine
+            </CardTitle>
+            <CardDescription>
+              Logo e Banners (Versões para Computador e Celular).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <ImageUploadBox
+              id="logo-upload"
+              label="Logo da Loja"
+              preview={logoPreview}
+              isPending={isPending}
+              onFileSelect={(file: File, url: string) => {
+                setLogoFile(file);
+                setLogoPreview(url);
+              }}
+              onClear={() => {
+                setLogoFile(null);
+                setLogoPreview(null);
+              }}
+            />
+
+            <Separator />
+
+            {/* Banner 1 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold tracking-tight">
+                Primeiro Banner
+              </h3>
+              <div className="grid gap-6 md:grid-cols-2">
+                <ImageUploadBox
+                  id="b1-desk-upload"
+                  label="Versão Desktop (Ex: 1352x800)"
+                  preview={b1DeskPreview}
+                  isPending={isPending}
+                  onFileSelect={(file: File, url: string) => {
+                    setB1DeskFile(file);
+                    setB1DeskPreview(url);
+                  }}
+                  onClear={() => {
+                    setB1DeskFile(null);
+                    setB1DeskPreview(null);
+                  }}
+                />
+                <ImageUploadBox
+                  id="b1-mob-upload"
+                  label="Versão Mobile (Ex: 365x460)"
+                  preview={b1MobPreview}
+                  isPending={isPending}
+                  onFileSelect={(file: File, url: string) => {
+                    setB1MobFile(file);
+                    setB1MobPreview(url);
+                  }}
+                  onClear={() => {
+                    setB1MobFile(null);
+                    setB1MobPreview(null);
+                  }}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Banner 2 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold tracking-tight">
+                Segundo Banner (Opcional)
+              </h3>
+              <div className="grid gap-6 md:grid-cols-2">
+                <ImageUploadBox
+                  id="b2-desk-upload"
+                  label="Versão Desktop (Ex: 1352x800)"
+                  preview={b2DeskPreview}
+                  isPending={isPending}
+                  onFileSelect={(file: File, url: string) => {
+                    setB2DeskFile(file);
+                    setB2DeskPreview(url);
+                  }}
+                  onClear={() => {
+                    setB2DeskFile(null);
+                    setB2DeskPreview(null);
+                  }}
+                />
+                <ImageUploadBox
+                  id="b2-mob-upload"
+                  label="Versão Mobile (Ex: 365x460)"
+                  preview={b2MobPreview}
+                  isPending={isPending}
+                  onFileSelect={(file: File, url: string) => {
+                    setB2MobFile(file);
+                    setB2MobPreview(url);
+                  }}
+                  onClear={() => {
+                    setB2MobFile(null);
+                    setB2MobPreview(null);
+                  }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Contato e Redes Sociais */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LinkIcon className="h-5 w-5" /> Contato e Redes Sociais
+            </CardTitle>
+            <CardDescription>
+              Links que ficarão disponíveis no rodapé da sua loja.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="instagramUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link do Instagram</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://instagram.com/sua_loja"
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="whatsapp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número do WhatsApp</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="5511999999999"
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Botão Salvar */}
+        <div className="flex justify-end">
+          <Button type="submit" size="lg" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Salvar Configurações
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+
+// Sub-componente com tipagem para parar de dar erro de "any"
+function ImageUploadBox({
+  id,
+  label,
+  preview,
+  isPending,
+  onFileSelect,
+  onClear,
+}: {
+  id: string;
+  label: string;
+  preview: string | null;
+  isPending: boolean;
+  onFileSelect: (file: File, url: string) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <FormLabel>{label}</FormLabel>
+      <div className="relative mt-2 flex justify-center rounded-lg border border-dashed px-6 py-6">
+        {preview ? (
+          <div className="relative h-32 w-full max-w-[300px]">
+            <Image
+              src={preview}
+              alt="Preview"
+              fill
+              className="rounded-md object-contain"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute -top-2 -right-2 z-10 h-6 w-6 rounded-full"
+              onClick={onClear}
+              disabled={isPending}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center">
+            <UploadCloud className="text-muted-foreground mx-auto h-8 w-8" />
+            <label
+              htmlFor={id}
+              className="text-primary mt-2 block cursor-pointer text-sm font-semibold hover:underline"
+            >
+              Escolher Foto
+              <input
+                id={id}
+                type="file"
+                className="sr-only"
+                accept="image/*"
+                disabled={isPending}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) onFileSelect(file, URL.createObjectURL(file));
+                }}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
