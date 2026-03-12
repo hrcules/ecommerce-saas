@@ -22,6 +22,13 @@
       "when": 1772650127325,
       "tag": "0002_loud_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773336725355,
+      "tag": "0003_brief_changeling",
+      "breakpoints": true
     }
   ]
 }
