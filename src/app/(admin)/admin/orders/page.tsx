@@ -16,13 +16,14 @@ interface AdminOrdersPageProps {
   searchParams: Promise<{
     start?: string;
     end?: string;
+    status?: string;
   }>;
 }
 
 export default async function AdminOrdersPage({
   searchParams,
 }: AdminOrdersPageProps) {
-  const { start, end } = await searchParams;
+  const { start, end, status } = await searchParams;
 
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -52,6 +53,10 @@ export default async function AdminOrdersPage({
   if (end) {
     const endDate = new Date(`${end}T23:59:59.999`);
     conditions.push(lte(orderTable.createdAt, endDate));
+  }
+
+  if (status && status !== "all") {
+    conditions.push(eq(orderTable.status, status));
   }
 
   // 3. Consulta Profunda (Deep Fetch): Trazendo Endereço, Itens, Variante e Produto Pai!
