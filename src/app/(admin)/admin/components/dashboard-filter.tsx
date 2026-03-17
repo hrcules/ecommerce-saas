@@ -2,25 +2,17 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X } from "lucide-react"; // Adicionámos o ícone X
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
-export default function OrdersFilter() {
+export default function DashboardFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [startDate, setStartDate] = useState(searchParams.get("start") || "");
   const [endDate, setEndDate] = useState(searchParams.get("end") || "");
-  const [status, setStatus] = useState(searchParams.get("status") || "all");
 
   const handleFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,28 +24,31 @@ export default function OrdersFilter() {
     if (endDate) params.set("end", endDate);
     else params.delete("end");
 
-    if (status && status !== "all") params.set("status", status);
-    else params.delete("status");
-
-    router.push(`/admin/orders?${params.toString()}`);
+    router.push(`/admin?${params.toString()}`);
   };
 
+  // Nova função para limpar os filtros
   const handleClear = () => {
     setStartDate("");
     setEndDate("");
-    setStatus("all");
-    router.push(`/admin/orders`);
-  };
 
-  const hasFilters = startDate || endDate || (status && status !== "all");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("start");
+    params.delete("end");
+
+    router.push(`/admin?${params.toString()}`);
+  };
 
   return (
     <form
       onSubmit={handleFilter}
-      className="bg-muted/20 mb-6 flex flex-wrap items-end gap-4 rounded-lg p-4"
+      className="bg-muted/20 flex flex-wrap items-end gap-4 rounded-lg border p-4"
     >
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="start" className="text-sm font-medium">
+        <label
+          htmlFor="start"
+          className="text-muted-foreground text-sm font-medium"
+        >
           Data Inicial
         </label>
         <Input
@@ -63,9 +58,11 @@ export default function OrdersFilter() {
           onChange={(e) => setStartDate(e.target.value)}
         />
       </div>
-
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="end" className="text-sm font-medium">
+        <label
+          htmlFor="end"
+          className="text-muted-foreground text-sm font-medium"
+        >
           Data Final
         </label>
         <Input
@@ -76,30 +73,20 @@ export default function OrdersFilter() {
         />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Status do Pedido</label>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="bg-background w-[180px]">
-            <SelectValue placeholder="Todos os status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="paid">Pago (Preparando)</SelectItem>
-            <SelectItem value="shipped">Enviado</SelectItem>
-            <SelectItem value="delivered">Entregue</SelectItem>
-            <SelectItem value="canceled">Cancelado</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="flex items-center gap-2">
-        <Button type="submit">
+        <Button type="submit" variant="secondary">
           <Search className="mr-2 h-4 w-4" />
           Filtrar
         </Button>
 
-        {hasFilters && (
-          <Button type="button" variant="ghost" onClick={handleClear}>
+        {/* O botão Limpar só aparece se houver uma data preenchida */}
+        {(startDate || endDate) && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleClear}
+            className="text-muted-foreground hover:text-foreground"
+          >
             <X className="mr-2 h-4 w-4" />
             Limpar
           </Button>

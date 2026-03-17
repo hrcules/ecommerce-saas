@@ -8,6 +8,11 @@ import {
   productVariantTable,
   storeTable,
   user,
+  orderTable,
+  orderItemTable,
+  shippingAddressTable,
+  cartItemTable,
+  cartTable,
 } from "./schema";
 
 const productImages = {
@@ -255,6 +260,12 @@ function generateSlug(name: string): string {
     .trim();
 }
 
+function getRandomDate(start: Date, end: Date) {
+  return new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime()),
+  );
+}
+
 const categories = [
   {
     name: "Acessórios",
@@ -274,11 +285,9 @@ const categories = [
 ];
 
 const products = [
-  // Acessórios
   {
     name: "Mochila",
-    description:
-      "Mochila resistente e confortável, ideal para o dia a dia e viagens.",
+    description: "Mochila resistente e confortável, ideal para o dia a dia.",
     categoryName: "Acessórios",
     variants: [
       { color: "Preta", price: 12999 },
@@ -314,12 +323,9 @@ const products = [
       { color: "Verde", price: 7999 },
     ],
   },
-
-  // Bermuda & Shorts
   {
     name: "Shorts Active",
-    description:
-      "Shorts esportivo para atividades físicas, com tecido que absorve o suor.",
+    description: "Shorts esportivo para atividades físicas.",
     categoryName: "Bermuda & Shorts",
     variants: [
       { color: "Preto", price: 6999 },
@@ -339,8 +345,7 @@ const products = [
   },
   {
     name: "Shorts Challenger",
-    description:
-      "Shorts com design moderno e confortável, ideal para diversas ocasiões.",
+    description: "Shorts com design moderno e confortável.",
     categoryName: "Bermuda & Shorts",
     variants: [
       { color: "Marrom", price: 7499 },
@@ -350,8 +355,7 @@ const products = [
   },
   {
     name: "Bermuda Premier",
-    description:
-      "Bermuda premium com qualidade superior e design diferenciado.",
+    description: "Bermuda premium com qualidade superior.",
     categoryName: "Bermuda & Shorts",
     variants: [
       { color: "Verde", price: 8999 },
@@ -359,12 +363,9 @@ const products = [
       { color: "Azul", price: 8999 },
     ],
   },
-
-  // Calças
   {
     name: "Calça Nike Club",
-    description:
-      "Calça esportiva Nike Club, confortável e versátil para treinos e uso casual.",
+    description: "Calça esportiva Nike Club, confortável e versátil.",
     categoryName: "Calças",
     variants: [
       { color: "Bege", price: 15999 },
@@ -374,8 +375,7 @@ const products = [
   },
   {
     name: "Calça Knit",
-    description:
-      "Calça de malha com tecido macio e confortável, ideal para relaxar.",
+    description: "Calça de malha com tecido macio e confortável.",
     categoryName: "Calças",
     variants: [
       { color: "Preta", price: 12999 },
@@ -385,8 +385,7 @@ const products = [
   },
   {
     name: "Calça Brooklin",
-    description:
-      "Calça com design urbano e moderno, perfeita para o street style.",
+    description: "Calça com design urbano e moderno.",
     categoryName: "Calças",
     variants: [
       { color: "Bege", price: 13999 },
@@ -396,8 +395,7 @@ const products = [
   },
   {
     name: "Calça Jordan",
-    description:
-      "Calça Jordan com qualidade premium e design icônico da marca.",
+    description: "Calça Jordan com qualidade premium.",
     categoryName: "Calças",
     variants: [
       { color: "Verde", price: 18999 },
@@ -405,12 +403,9 @@ const products = [
       { color: "Azul", price: 18999 },
     ],
   },
-
-  // Camisetas
   {
     name: "Camiseta ACG",
-    description:
-      "Camiseta ACG com design técnico e material de alta qualidade.",
+    description: "Camiseta ACG com design técnico.",
     categoryName: "Camisetas",
     variants: [
       { color: "Bege", price: 6999 },
@@ -420,8 +415,7 @@ const products = [
   },
   {
     name: "Camiseta Run",
-    description:
-      "Camiseta para corrida com tecido respirável e conforto superior.",
+    description: "Camiseta para corrida com tecido respirável.",
     categoryName: "Camisetas",
     variants: [
       { color: "Preta", price: 5999 },
@@ -430,8 +424,7 @@ const products = [
   },
   {
     name: "Camiseta Active",
-    description:
-      "Camiseta esportiva para atividades físicas com tecnologia Dri-FIT.",
+    description: "Camiseta esportiva com tecnologia Dri-FIT.",
     categoryName: "Camisetas",
     variants: [
       { color: "Branca", price: 5499 },
@@ -440,20 +433,16 @@ const products = [
   },
   {
     name: "Camiseta Nature",
-    description:
-      "Camiseta com estampa inspirada na natureza, confortável e estilosa.",
+    description: "Camiseta com estampa inspirada na natureza.",
     categoryName: "Camisetas",
     variants: [
       { color: "Preta", price: 6499 },
       { color: "Azul", price: 6499 },
     ],
   },
-
-  // Jaquetas & Moletons
   {
     name: "Corta Vento",
-    description:
-      "Jaqueta corta-vento leve e resistente, ideal para atividades ao ar livre.",
+    description: "Jaqueta corta-vento leve e resistente.",
     categoryName: "Jaquetas & Moletons",
     variants: [
       { color: "Preto", price: 19999 },
@@ -462,8 +451,7 @@ const products = [
   },
   {
     name: "Jaqueta Windrunner",
-    description:
-      "Jaqueta Windrunner com design clássico e proteção contra o vento.",
+    description: "Jaqueta Windrunner com design clássico.",
     categoryName: "Jaquetas & Moletons",
     variants: [
       { color: "Azul", price: 22999 },
@@ -472,8 +460,7 @@ const products = [
   },
   {
     name: "Jaqueta Style",
-    description:
-      "Jaqueta com estilo urbano e moderno, perfeita para compor looks casuais.",
+    description: "Jaqueta com estilo urbano e moderno.",
     categoryName: "Jaquetas & Moletons",
     variants: [
       { color: "Marrom", price: 17999 },
@@ -482,19 +469,16 @@ const products = [
   },
   {
     name: "Jaqueta Nike Club",
-    description: "Jaqueta Nike Club com qualidade premium e design atemporal.",
+    description: "Jaqueta Nike Club com qualidade premium.",
     categoryName: "Jaquetas & Moletons",
     variants: [
       { color: "Azul", price: 25999 },
       { color: "Amarela", price: 25999 },
     ],
   },
-
-  // Tênis
   {
     name: "Tênis Nike Vomero",
-    description:
-      "Tênis Nike Vomero com tecnologia de amortecimento superior para corridas.",
+    description: "Tênis Nike Vomero com tecnologia de amortecimento.",
     categoryName: "Tênis",
     variants: [
       { color: "Preto", price: 79999 },
@@ -504,7 +488,7 @@ const products = [
   },
   {
     name: "Tênis Nike Panda",
-    description: "Tênis Nike com design Panda icônico, confortável e estiloso.",
+    description: "Tênis Nike com design Panda icônico.",
     categoryName: "Tênis",
     variants: [
       { color: "Verde", price: 69999 },
@@ -514,8 +498,7 @@ const products = [
   },
   {
     name: "Tênis Nike Air Force",
-    description:
-      "Tênis Nike Air Force 1, um clássico atemporal com design icônico.",
+    description: "Tênis Nike Air Force 1, um clássico.",
     categoryName: "Tênis",
     variants: [
       { color: "Preto", price: 89999 },
@@ -524,7 +507,7 @@ const products = [
   },
   {
     name: "Tênis Nike Dunk Low",
-    description: "Tênis Nike Dunk Low com design retrô e conforto moderno.",
+    description: "Tênis Nike Dunk Low com design retrô.",
     categoryName: "Tênis",
     variants: [
       { color: "Branco", price: 75999 },
@@ -535,31 +518,31 @@ const products = [
 ];
 
 async function main() {
-  console.log(
-    "🌱 Iniciando o seeding do banco de dados (SaaS Multi-tenant)...",
-  );
+  console.log("🌱 Iniciando o seeding avançado (com Pedidos!)...");
 
   try {
-    // 1. Limpar os dados antigos em ordem de dependência (Cascata)
-    console.log("🧹 Limpando dados existentes...");
+    console.log("🧹 Limpando dados existentes (em Cascata)...");
+    await db.delete(orderItemTable);
+    await db.delete(orderTable);
+    await db.delete(cartItemTable);
+    await db.delete(cartTable);
+    await db.delete(shippingAddressTable);
     await db.delete(productVariantTable);
     await db.delete(productTable);
     await db.delete(categoryTable);
     await db.delete(storeTable);
-    console.log("✅ Dados limpos com sucesso!");
+    console.log("✅ Dados limpos!");
 
-    // 2. Tentar buscar o usuário Admin. Se não existir, criamos um!
     let [adminUser] = await db
       .select()
       .from(user)
       .where(eq(user.email, "admin@bewear.com"));
-
     if (!adminUser) {
-      console.log("👤 Criando Usuário Admin base...");
+      console.log("👤 Criando Usuário Admin...");
       [adminUser] = await db
         .insert(user)
         .values({
-          id: crypto.randomUUID(), // Geramos o ID para a tabela de auth
+          id: crypto.randomUUID(),
           name: "Hércules Admin",
           email: "admin@bewear.com",
           emailVerified: true,
@@ -567,97 +550,168 @@ async function main() {
           updatedAt: new Date(),
         })
         .returning();
-    } else {
-      console.log(`👤 Usuário Admin já existe: ${adminUser.email}`);
     }
 
-    // 3. Criar a Loja (Tenant) e vincular ao Admin
-    console.log("🏪 Criando Loja (Tenant) principal...");
+    let [testCustomer] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, "cliente@teste.com"));
+    if (!testCustomer) {
+      console.log("👤 Criando Cliente Falso para Pedidos...");
+      [testCustomer] = await db
+        .insert(user)
+        .values({
+          id: crypto.randomUUID(),
+          name: "Cliente de Teste",
+          email: "cliente@teste.com",
+          emailVerified: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+    }
+
+    console.log("🏠 Criando Endereço de Entrega para o Cliente...");
+    const [address] = await db
+      .insert(shippingAddressTable)
+      .values({
+        userId: testCustomer.id,
+        fullName: "Cliente de Teste",
+        email: "cliente@teste.com",
+        cpf: "123.456.789-00",
+        phone: "(11) 99999-9999",
+        zipCode: "01001-000",
+        address: "Praça da Sé",
+        number: "1",
+        neighborhood: "Sé",
+        city: "São Paulo",
+        state: "SP",
+      })
+      .returning();
+
+    console.log("🏪 Criando Loja (BEWEAR)...");
     const [store] = await db
       .insert(storeTable)
       .values({
         name: "BEWEAR",
         slug: "bewear",
-        colorPrimary: "#8B5CF6", // Cor roxa original
+        colorPrimary: "#8B5CF6",
         ownerId: adminUser.id,
       })
       .returning();
 
-    // 4. Inserir categorias passando o storeId da Loja criada
     const categoryMap = new Map<string, string>();
-
-    console.log("📂 Criando categorias...");
-    for (const categoryData of categories) {
-      const categoryId = crypto.randomUUID();
-      const categorySlug = generateSlug(categoryData.name);
-
-      console.log(`  📁 Criando categoria: ${categoryData.name}`);
-
+    for (const cat of categories) {
+      const catId = crypto.randomUUID();
       await db.insert(categoryTable).values({
-        id: categoryId,
-        name: categoryData.name,
-        slug: categorySlug,
-        storeId: store.id, // VÍNCULO SaaS ADICIONADO AQUI
+        id: catId,
+        name: cat.name,
+        slug: generateSlug(cat.name),
+        storeId: store.id,
       });
-
-      categoryMap.set(categoryData.name, categoryId);
+      categoryMap.set(cat.name, catId);
     }
 
-    // 5. Inserir produtos passando o storeId da Loja criada
-    for (const productData of products) {
-      const productId = crypto.randomUUID();
-      const productSlug = generateSlug(productData.name);
-      const categoryId = categoryMap.get(productData.categoryName);
+    const allCreatedVariants = [];
 
-      if (!categoryId) {
-        throw new Error(
-          `Categoria "${productData.categoryName}" não encontrada`,
-        );
-      }
-
-      console.log(`📦 Criando produto: ${productData.name}`);
+    console.log("📦 Criando Produtos e Variantes...");
+    for (const prod of products) {
+      const prodId = crypto.randomUUID();
+      const catId = categoryMap.get(prod.categoryName)!;
 
       await db.insert(productTable).values({
-        id: productId,
-        name: productData.name,
-        slug: productSlug,
-        description: productData.description,
-        categoryId: categoryId,
-        storeId: store.id, // VÍNCULO SaaS ADICIONADO AQUI
+        id: prodId,
+        name: prod.name,
+        slug: generateSlug(prod.name),
+        description: prod.description,
+        categoryId: catId,
+        storeId: store.id,
       });
 
-      // 6. Inserir variantes do produto
-      for (const variantData of productData.variants) {
-        const variantId = crypto.randomUUID();
-        const productKey = productData.name as keyof typeof productImages;
+      for (const vData of prod.variants) {
+        const productKey = prod.name as keyof typeof productImages;
         const variantImages =
           productImages[productKey]?.[
-            variantData.color as keyof (typeof productImages)[typeof productKey]
+            vData.color as keyof (typeof productImages)[typeof productKey]
           ] || [];
 
-        console.log(`  🎨 Criando variante: ${variantData.color}`);
+        const [createdVariant] = await db
+          .insert(productVariantTable)
+          .values({
+            id: crypto.randomUUID(),
+            name: vData.color,
+            productId: prodId,
+            color: vData.color,
+            imageUrl: variantImages[0] || "",
+            priceInCents: vData.price,
+            stock: Math.floor(Math.random() * 50) + 1, // Estoque aleatório entre 1 e 50
+            slug: generateSlug(`${prod.name}-${vData.color}`),
+          })
+          .returning();
 
-        await db.insert(productVariantTable).values({
-          id: variantId,
-          name: variantData.color,
-          productId: productId,
-          color: variantData.color,
-          imageUrl: variantImages[0] || "",
-          priceInCents: variantData.price,
-          slug: generateSlug(`${productData.name}-${variantData.color}`),
+        allCreatedVariants.push(createdVariant);
+      }
+    }
+
+    console.log("🛒 Gerando 30 Pedidos Aleatórios (Jan/Fev/Mar 2026)...");
+    const startDate = new Date("2026-01-01T00:00:00Z");
+    const endDate = new Date("2026-03-16T23:59:59Z");
+    const statuses = ["paid", "shipped", "delivered", "canceled"];
+
+    let orderNum = 1000;
+    for (let i = 0; i < 30; i++) {
+      const randomDate = getRandomDate(startDate, endDate);
+      const randomStatus =
+        statuses[Math.floor(Math.random() * statuses.length)];
+
+      const numItems = Math.floor(Math.random() * 3) + 1; // 1 a 3 itens por pedido
+      const itemsToInsert = [];
+      let orderTotal = 0;
+
+      for (let j = 0; j < numItems; j++) {
+        const randomVariant =
+          allCreatedVariants[
+            Math.floor(Math.random() * allCreatedVariants.length)
+          ];
+        const qty = Math.floor(Math.random() * 2) + 1; // 1 a 2 unidades
+        itemsToInsert.push({
+          variantId: randomVariant.id,
+          qty: qty,
+          price: randomVariant.priceInCents,
+        });
+        orderTotal += randomVariant.priceInCents * qty;
+      }
+
+      const [order] = await db
+        .insert(orderTable)
+        .values({
+          id: crypto.randomUUID(),
+          userId: testCustomer.id,
+          shippingAddressId: address.id,
+          storeId: store.id,
+          stripeCheckoutSessionId: `cs_test_mock_${crypto.randomBytes(8).toString("hex")}`,
+          status: randomStatus,
+          orderNumber: orderNum++,
+          totalPriceInCents: orderTotal,
+          createdAt: randomDate,
+          updatedAt: randomDate,
+        })
+        .returning();
+
+      for (const item of itemsToInsert) {
+        await db.insert(orderItemTable).values({
+          id: crypto.randomUUID(),
+          orderId: order.id,
+          productVariantId: item.variantId,
+          quantity: item.qty,
+          priceInCents: item.price,
+          createdAt: randomDate,
+          updatedAt: randomDate,
         });
       }
     }
 
-    console.log("✅ Seeding concluído com sucesso!");
-    console.log(
-      `📊 Foram criadas ${categories.length} categorias, ${
-        products.length
-      } produtos com ${products.reduce(
-        (acc, p) => acc + p.variants.length,
-        0,
-      )} variantes na Loja ${store.name}.`,
-    );
+    console.log("🚀 Seeding 100% finalizado! O seu Dashboard agora está vivo!");
   } catch (error) {
     console.error("❌ Erro durante o seeding:", error);
     throw error;
