@@ -9,6 +9,7 @@ import {
   productVariantTable,
   storeTable,
   user,
+  notificationTable,
 } from "@/db/schema";
 import {
   sendCustomerReceiptEmail,
@@ -109,6 +110,17 @@ export const POST = async (request: Request) => {
               order.orderNumber,
               store.name,
               formattedPrice,
+            );
+
+            await db.insert(notificationTable).values({
+              userId: owner.id,
+              title: "💰 Nova Venda Realizada!",
+              message: `O pedido #${order.orderNumber} no valor de ${formattedPrice} acabou de ser pago.`,
+              type: "sale",
+            });
+
+            console.log(
+              "✅ E-mails enviados e notificação criada com sucesso!",
             );
           }
         }
