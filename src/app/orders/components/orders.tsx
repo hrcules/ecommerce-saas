@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { orderTable } from "@/db/schema";
 import { formatCentsToBRL } from "@/helpers/money";
-import { translateOrderStatus } from "@/helpers/orders-status"; // <-- Importamos o seu helper!
+import { translateOrderStatus } from "@/helpers/orders-status";
 
 interface OrdersProps {
   orders: Array<{
@@ -39,18 +39,17 @@ const Orders = ({ orders }: OrdersProps) => {
     return orderNumber.toString().padStart(4, "0");
   }
 
-  // Função para definir a cor do Badge dinamicamente
   function getBadgeVariant(status: string) {
     switch (status.toLowerCase()) {
       case "pending":
       case "canceled":
-        return "destructive"; // Vermelho
+        return "destructive";
       case "refunded":
-        return "secondary"; // Cinza claro
+        return "secondary";
       case "processing":
-        return "outline"; // Borda simples
+        return "outline";
       default:
-        return "default"; // Preto/Primário (Paid, Shipped, Delivered)
+        return "default";
     }
   }
 
@@ -63,7 +62,6 @@ const Orders = ({ orders }: OrdersProps) => {
               <AccordionItem value="item-1">
                 <AccordionTrigger>
                   <div className="flex flex-col items-start gap-1">
-                    {/* A MÁGICA ACONTECE AQUI: Texto e Cor Dinâmicos! */}
                     <Badge variant={getBadgeVariant(order.status)}>
                       {translateOrderStatus(order.status)}
                     </Badge>
@@ -87,7 +85,6 @@ const Orders = ({ orders }: OrdersProps) => {
                   <Separator className="my-4" />
 
                   {order.items.map((product, index) => (
-                    // React.Fragment usado para podermos passar a propriedade "key" corretamente
                     <React.Fragment key={product.id}>
                       <div className="my-5 flex items-center justify-between">
                         <div className="flex items-center gap-4">

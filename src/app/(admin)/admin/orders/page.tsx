@@ -33,7 +33,6 @@ export default async function AdminOrdersPage({
     redirect("/authentication");
   }
 
-  // 1. Identifica a loja do lojista
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.ownerId, session.user.id),
   });
@@ -42,7 +41,6 @@ export default async function AdminOrdersPage({
     redirect("/");
   }
 
-  // 2. Monta as condições do filtro Dinamicamente
   const conditions = [eq(orderTable.storeId, store.id)];
 
   if (start) {
@@ -59,7 +57,6 @@ export default async function AdminOrdersPage({
     conditions.push(eq(orderTable.status, status));
   }
 
-  // 3. Consulta Profunda (Deep Fetch): Trazendo Endereço, Itens, Variante e Produto Pai!
   const orders = await db.query.orderTable.findMany({
     where: and(...conditions),
     orderBy: [desc(orderTable.createdAt)],

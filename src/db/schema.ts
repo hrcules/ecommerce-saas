@@ -293,3 +293,15 @@ export const orderItemRelations = relations(orderItemTable, ({ one }) => ({
     references: [productVariantTable.id],
   }),
 }));
+
+export const notificationTable = pgTable("notification", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

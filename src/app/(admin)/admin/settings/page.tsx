@@ -17,7 +17,6 @@ export default async function SettingsPage() {
     redirect("/authentication");
   }
 
-  // Busca a loja do usuário atual
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.ownerId, session.user.id),
   });

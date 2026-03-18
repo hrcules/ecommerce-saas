@@ -9,6 +9,7 @@ import {
   productVariantTable,
   storeTable,
   user,
+  notificationTable,
 } from "@/db/schema";
 import {
   sendCustomerReceiptEmail,
@@ -18,11 +19,11 @@ import { formatCentsToBRL } from "@/helpers/money";
 
 export const POST = async (request: Request) => {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return new NextResponse("Chaves ausentes", { status: 400 }); // Ajustado!
+    return new NextResponse("Chaves ausentes", { status: 400 });
   }
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
-    return new NextResponse("Assinatura ausente", { status: 400 }); // Ajustado!
+    return new NextResponse("Assinatura ausente", { status: 400 });
   }
 
   const text = await request.text();
@@ -109,6 +110,17 @@ export const POST = async (request: Request) => {
               order.orderNumber,
               store.name,
               formattedPrice,
+            );
+
+            await db.insert(notificationTable).values({
+              userId: owner.id,
+              title: "💰 Nova Venda Realizada!",
+              message: `O pedido #${order.orderNumber} no valor de ${formattedPrice} acabou de ser pago.`,
+              type: "sale",
+            });
+
+            console.log(
+              "✅ E-mails enviados e notificação criada com sucesso!",
             );
           }
         }

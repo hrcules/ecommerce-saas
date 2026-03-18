@@ -15,7 +15,6 @@ const Header = async () => {
     where: eq(categoryTable.storeId, store.id),
   });
 
-  // AQUI: Passamos a loja (store) inteira como prop para o cliente!
   return <HeaderClient categories={categories} store={store} />;
 };
 

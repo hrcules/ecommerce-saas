@@ -21,7 +21,6 @@ export default async function AdminProductsPage() {
     redirect("/authentication");
   }
 
-  // 1. Identifica a loja do lojista (A trava do SaaS)
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.ownerId, session.user.id),
   });
@@ -30,10 +29,9 @@ export default async function AdminProductsPage() {
     redirect("/");
   }
 
-  // 2. Busca os produtos DA LOJA com as categorias e variantes
   const products = await db.query.productTable.findMany({
     where: eq(productTable.storeId, store.id),
-    orderBy: [desc(productTable.createdAt)], // Exigência sua: Ordenado pelos últimos adicionados
+    orderBy: [desc(productTable.createdAt)],
     with: {
       category: true,
       variants: true,
@@ -89,7 +87,6 @@ export default async function AdminProductsPage() {
                   </thead>
                   <tbody>
                     {products.map((product) => {
-                      // Pegamos o preço da primeira variante para mostrar na tabela como "Preço Base"
                       const basePrice = product.variants[0]?.priceInCents || 0;
 
                       return (

@@ -53,7 +53,7 @@ export function CreateVariantDialog({
     startTransition(async () => {
       try {
         await createVariantAction(formData);
-        setIsOpen(false); // Fecha o modal se deu tudo certo
+        setIsOpen(false);
         setImagePreview(null);
         setSelectedFile(null);
       } catch (error) {

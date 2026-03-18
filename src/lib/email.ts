@@ -66,7 +66,7 @@ export async function sendStoreOwnerNotificationEmail(
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        sender: { name: "Notificações SaaS", email: SENDER_EMAIL },
+        sender: { name: "Notificações BEWEAR", email: SENDER_EMAIL },
         to: [{ email: ownerEmail }],
         subject: `💰 Nova Venda Realizada! Pedido #${orderNumber}`,
         htmlContent: `

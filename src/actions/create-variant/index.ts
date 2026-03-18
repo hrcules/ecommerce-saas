@@ -69,7 +69,6 @@ export async function createVariantAction(formData: FormData) {
 
   const imageUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
 
-  // 5. Salvar a Variação no Banco
   await db.insert(productVariantTable).values({
     productId,
     name,
@@ -81,7 +80,6 @@ export async function createVariantAction(formData: FormData) {
     slug: variantSlug,
   });
 
-  // Atualiza a página do produto específico
   revalidatePath(`/admin/products/${productId}`);
 
   return { success: true };

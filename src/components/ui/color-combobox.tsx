@@ -34,10 +34,8 @@ export function ColorCombobox({
   const [value, setValue] = React.useState(defaultValue || "");
   const [inputValue, setInputValue] = React.useState("");
 
-  // Montamos a lista de opções combinando as existentes com o que o usuário está digitando
   const options = React.useMemo(() => {
     const list = [...existingColors];
-    // Se ele digitou algo que não existe na lista, adicionamos como uma nova opção!
     if (inputValue && !list.includes(inputValue)) {
       list.push(inputValue);
     }
@@ -46,7 +44,6 @@ export function ColorCombobox({
 
   return (
     <>
-      {/* O PULO DO GATO: Input invisível para o FormData capturar o valor no submit do form! */}
       <input type="hidden" name="color" value={value} required />
 
       <Popover open={open} onOpenChange={setOpen}>

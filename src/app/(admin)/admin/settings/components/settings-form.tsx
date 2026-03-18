@@ -340,7 +340,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
   );
 }
 
-// Sub-componente com tipagem para parar de dar erro de "any"
 function ImageUploadBox({
   id,
   label,

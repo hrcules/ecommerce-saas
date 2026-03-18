@@ -76,7 +76,6 @@ const ProductGrid = ({ title, products }: ProductListProps) => {
             key={product.id}
             product={product}
             textContainerClassName="w-full max-w-none"
-            // No Grid não precisamos de min-w, as colunas controlam a largura automaticamente!
           />
         ))}
       </div>

@@ -12,7 +12,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-// Importamos a storeTable para tipagem
 import type { categoryTable, storeTable } from "@/db/schema";
 import { authClient } from "@/lib/auth-client";
 
@@ -30,7 +29,7 @@ import Cart from "../cart";
 
 interface HeaderClientProps {
   categories: (typeof categoryTable.$inferSelect)[];
-  store: typeof storeTable.$inferSelect; // Recebendo a loja do servidor
+  store: typeof storeTable.$inferSelect;
 }
 
 const HeaderClient = ({ categories, store }: HeaderClientProps) => {

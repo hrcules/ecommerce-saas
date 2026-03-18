@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 import { Metadata } from "next";
+import NotificationBell from "@/components/common/notification-bell";
 
 export const metadata: Metadata = {
   title: "admin",
@@ -37,7 +38,10 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen">
       <aside className="bg-muted/20 hidden w-64 border-r p-6 md:block">
-        <div className="mb-8 text-xl font-bold">{store.name} Admin</div>
+        <div className="mb-8 flex items-center justify-between">
+          <div className="text-xl font-bold">{store.name} Admin</div>
+          <NotificationBell />
+        </div>
         <nav className="space-y-2">
           <Button
             variant="ghost"

@@ -75,7 +75,6 @@ export const createDirectOrder = async (input: unknown) => {
       priceInCents: variant.priceInCents,
     });
 
-    // 6. Retorno esperado pelo componente do Stripe
     return { orderId: order.id };
   } catch (error) {
     console.error("Erro ao criar pedido direto:", error);

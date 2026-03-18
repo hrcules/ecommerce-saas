@@ -42,7 +42,6 @@ export function EditProductDialog({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    // Injetamos o ID do produto de forma oculta para a action saber quem atualizar
     formData.append("productId", product.id);
 
     startTransition(async () => {
