@@ -20,7 +20,6 @@ export default async function NewProductPage() {
     redirect("/authentication");
   }
 
-  // 1. Identifica a loja atual
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.ownerId, session.user.id),
   });
@@ -29,7 +28,6 @@ export default async function NewProductPage() {
     redirect("/");
   }
 
-  // 2. Busca as categorias APENAS dessa loja para o Select do formulário
   const categories = await db.query.categoryTable.findMany({
     where: eq(categoryTable.storeId, store.id),
   });

@@ -18,7 +18,6 @@ export async function deleteVariantAction(
 
   if (!session?.user) throw new Error("Não autorizado");
 
-  // Trava de segurança SaaS
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.ownerId, session.user.id),
   });
@@ -33,12 +32,10 @@ export async function deleteVariantAction(
     throw new Error("Produto inválido ou sem permissão.");
   }
 
-  // Deleta a variante do banco de dados
   await db
     .delete(productVariantTable)
     .where(eq(productVariantTable.id, variantId));
 
-  // Recarrega a página para a tabela atualizar
   revalidatePath(`/admin/products/${productId}`);
 
   return { success: true };

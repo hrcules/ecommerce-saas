@@ -25,7 +25,6 @@ export const createShippingAddress = async (
     throw new Error("Unauthorized");
   }
 
-  // Cria o endereço vinculado apenas ao Usuário com os campos corretos da Fase 1
   const [shippingAddress] = await db
     .insert(shippingAddressTable)
     .values({

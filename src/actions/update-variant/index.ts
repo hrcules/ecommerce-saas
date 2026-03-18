@@ -29,7 +29,6 @@ export async function updateVariantAction(formData: FormData) {
   });
   if (!store) throw new Error("Loja não encontrada");
 
-  // Extração
   const variantId = formData.get("variantId") as string;
   const productId = formData.get("productId") as string;
   const color = formData.get("color") as string;
@@ -56,7 +55,6 @@ export async function updateVariantAction(formData: FormData) {
     updatedAt: new Date(),
   };
 
-  // Se o lojista enviou uma foto NOVA, fazemos o upload pro R2
   if (imageFile && imageFile.size > 0) {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
     const fileName = `${store.id}/produtos/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
@@ -72,7 +70,6 @@ export async function updateVariantAction(formData: FormData) {
     updateData.imageUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
   }
 
-  // Atualiza no banco
   await db
     .update(productVariantTable)
     .set(updateData)

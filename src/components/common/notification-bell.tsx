@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, CheckCheck, ChevronLeft, ChevronRight } from "lucide-react"; // Adicionamos as setas!
+import { Bell, CheckCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -17,7 +17,6 @@ export default function NotificationBell() {
   const markAsReadMutation = useMarkNotificationRead();
   const markAllReadMutation = useMarkAllNotificationsRead();
 
-  // === LÓGICA DE PAGINAÇÃO ===
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
 
@@ -27,7 +26,6 @@ export default function NotificationBell() {
     startIndex,
     startIndex + itemsPerPage,
   );
-  // ===========================
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -39,7 +37,7 @@ export default function NotificationBell() {
 
   const handleMarkAllRead = () => {
     markAllReadMutation.mutate();
-    setCurrentPage(1); // Volta para a página 1 ao limpar tudo
+    setCurrentPage(1);
   };
 
   return (

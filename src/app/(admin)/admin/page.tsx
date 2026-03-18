@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -8,7 +8,6 @@ import {
   Package,
   ShoppingBag,
   ArrowRight,
-  Calendar,
 } from "lucide-react";
 
 import { db } from "@/db";
@@ -55,10 +54,8 @@ export default async function AdminDashboardPage({
     redirect("/");
   }
 
-  // --- LÓGICA DE FILTRO DE DATAS ---
   const orderConditions = [eq(orderTable.storeId, store.id)];
 
-  // Já usando a correção de fuso horário que fizemos antes!
   if (start) {
     const startDate = new Date(`${start}T00:00:00`);
     orderConditions.push(gte(orderTable.createdAt, startDate));
@@ -68,7 +65,6 @@ export default async function AdminDashboardPage({
     orderConditions.push(lte(orderTable.createdAt, endDate));
   }
 
-  // Busca os pedidos FILTRADOS PELA DATA
   const orders = await db.query.orderTable.findMany({
     where: and(...orderConditions),
     with: {
@@ -82,13 +78,11 @@ export default async function AdminDashboardPage({
     },
   });
 
-  // Busca TODOS os produtos para checar o estoque (Estoque não tem filtro de data)
   const storeProducts = await db.query.productTable.findMany({
     where: eq(productTable.storeId, store.id),
     with: { variants: true },
   });
 
-  // --- PROCESSAMENTO DAS MÉTRICAS ---
   const successfulOrders = orders.filter((o) => o.status !== "canceled");
   const totalRevenueInCents = successfulOrders.reduce(
     (acc, order) => acc + order.totalPriceInCents,
@@ -158,7 +152,6 @@ export default async function AdminDashboardPage({
           </p>
         </div>
 
-        {/* FILTRO DE DATAS ADICIONADO AQUI */}
         <DashboardFilter />
       </div>
 

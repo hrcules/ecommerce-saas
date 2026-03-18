@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Search, X } from "lucide-react"; // Adicionámos o ícone X
+import { Search, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,6 @@ export default function DashboardFilter() {
     router.push(`/admin?${params.toString()}`);
   };
 
-  // Nova função para limpar os filtros
   const handleClear = () => {
     setStartDate("");
     setEndDate("");

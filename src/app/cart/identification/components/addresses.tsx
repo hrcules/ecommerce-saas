@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useSearchParams } from "next/navigation"; // <-- Adicionado useSearchParams
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
@@ -47,7 +47,6 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddressesProps {
   shippingAddresses: (typeof shippingAddressTable.$inferSelect)[];
   defaultShippingAddressId: string | null;
-  // Mantemos as tipagens caso você opte por usá-las posteriormente
   variantId?: string;
   quantity?: number;
 }
@@ -57,7 +56,7 @@ const Addresses = ({
   defaultShippingAddressId,
 }: AddressesProps) => {
   const router = useRouter();
-  const searchParams = useSearchParams(); // <-- Hook para capturar estado da URL
+  const searchParams = useSearchParams();
 
   const [selectedAddress, setSelectedAddress] = useState<string | null>(
     defaultShippingAddressId || null,
@@ -121,11 +120,9 @@ const Addresses = ({
     if (!selectedAddress || selectedAddress === "add_new") return;
 
     try {
-      // Capturamos os parâmetros da URL dinamicamente
       const variantId = searchParams.get("variantId");
       const quantity = searchParams.get("quantity");
 
-      // Se for Compra Direta, preservamos a URL e NÃO alteramos o banco
       if (variantId && quantity) {
         const params = new URLSearchParams();
         params.set("variantId", variantId);
@@ -133,10 +130,9 @@ const Addresses = ({
         params.set("addressId", selectedAddress);
 
         router.push(`/cart/confirmation?${params.toString()}`);
-        return; // Retorno antecipado (Guard Clause) para não executar a mutation
+        return;
       }
 
-      // Se for o fluxo normal de Carrinho, o código original roda intacto
       await updateCartShippingAddressMutation.mutateAsync({
         shippingAddressId: selectedAddress,
       });

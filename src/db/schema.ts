@@ -298,10 +298,10 @@ export const notificationTable = pgTable("notification", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id, { onDelete: "cascade" }), // Relacionado ao Lojista
+    .references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   message: text("message").notNull(),
-  type: text("type").notNull(), // Ex: 'sale', 'system', 'alert'
+  type: text("type").notNull(),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

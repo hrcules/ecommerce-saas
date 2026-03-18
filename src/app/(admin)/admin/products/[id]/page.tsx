@@ -35,7 +35,6 @@ export default async function EditProductPage({
     redirect("/authentication");
   }
 
-  // 1. Identifica a loja atual
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.ownerId, session.user.id),
   });
@@ -44,7 +43,6 @@ export default async function EditProductPage({
     redirect("/");
   }
 
-  // 2. Busca o Produto blindando pelo ID do Produto E pelo ID da Loja!
   const product = await db.query.productTable.findFirst({
     where: and(eq(productTable.id, id), eq(productTable.storeId, store.id)),
     with: {
@@ -57,7 +55,6 @@ export default async function EditProductPage({
     return notFound();
   }
 
-  // Busca as categorias da loja para o Select de edição
   const categories = await db.query.categoryTable.findMany({
     where: eq(categoryTable.storeId, store.id),
   });

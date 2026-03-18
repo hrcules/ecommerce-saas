@@ -46,7 +46,6 @@ export const CategoryDialog = ({
     defaultValues: { name: "", slug: "" },
   });
 
-  // Preenche o formulário ao editar
   useEffect(() => {
     if (category) {
       form.reset({ id: category.id, name: category.name, slug: category.slug });

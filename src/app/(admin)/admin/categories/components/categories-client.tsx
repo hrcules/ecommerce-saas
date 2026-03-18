@@ -26,7 +26,6 @@ export const CategoriesClient = ({ categories }: CategoriesClientProps) => {
     slug: string;
   } | null>(null);
 
-  // useTransition é perfeito para Server Actions no Next.js
   const [isPending, startTransition] = useTransition();
 
   const handleEdit = (category: { id: string; name: string; slug: string }) => {
@@ -40,13 +39,11 @@ export const CategoriesClient = ({ categories }: CategoriesClientProps) => {
   };
 
   const handleDelete = (id: string, name: string) => {
-    // 1. Trava Visual Frontend: Evita a requisição à toa
     if (categories.length <= 1) {
       toast.error("Você não pode excluir a única categoria da sua loja.");
       return;
     }
 
-    // 2. Confirmação do Usuário
     if (
       window.confirm(
         `Tem certeza que deseja excluir a categoria "${name}"? Os produtos vinculados a ela poderão ficar inacessíveis.`,

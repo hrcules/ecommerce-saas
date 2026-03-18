@@ -19,11 +19,11 @@ import { formatCentsToBRL } from "@/helpers/money";
 
 export const POST = async (request: Request) => {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return new NextResponse("Chaves ausentes", { status: 400 }); // Ajustado!
+    return new NextResponse("Chaves ausentes", { status: 400 });
   }
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
-    return new NextResponse("Assinatura ausente", { status: 400 }); // Ajustado!
+    return new NextResponse("Assinatura ausente", { status: 400 });
   }
 
   const text = await request.text();

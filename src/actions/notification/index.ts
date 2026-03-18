@@ -48,7 +48,6 @@ export const markNotificationAsRead = async (notificationId: string) => {
   return { success: true };
 };
 
-// 3. NOVA ACTION: Marca TODAS as notificações como lidas de uma vez
 export const markAllNotificationsAsRead = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),

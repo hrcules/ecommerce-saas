@@ -12,13 +12,11 @@ export const deleteCategory = async (categoryId: string) => {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) throw new Error("Não autorizado");
 
-  // 1. Busca a loja do usuário
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.ownerId, session.user.id),
   });
   if (!store) throw new Error("Loja não encontrada");
 
-  // 2. Trava de Segurança SaaS: Conta as categorias ativas desta loja
   const categoriesCount = await db
     .select({ value: count() })
     .from(categoryTable)
@@ -28,7 +26,6 @@ export const deleteCategory = async (categoryId: string) => {
     throw new Error("Sua loja precisa ter pelo menos uma categoria ativa.");
   }
 
-  // 3. Exclui a categoria (garantindo pelo `and` que ela pertence a esta loja)
   await db
     .delete(categoryTable)
     .where(
@@ -38,6 +35,5 @@ export const deleteCategory = async (categoryId: string) => {
       ),
     );
 
-  // Atualiza a tela instantaneamente
   revalidatePath("/admin/categories");
 };
