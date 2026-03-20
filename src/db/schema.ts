@@ -77,6 +77,11 @@ export const storeTable = pgTable("store", {
   instagramUrl: text("instagram_url"),
   whatsapp: text("whatsapp"),
 
+  fixedShippingFeeInCents: integer("fixed_shipping_fee_in_cents")
+    .default(0)
+    .notNull(),
+  freeShippingThresholdInCents: integer("free_shipping_threshold_in_cents"),
+
   ownerId: text("owner_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

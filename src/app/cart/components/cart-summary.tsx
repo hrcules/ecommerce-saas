@@ -5,6 +5,7 @@ import CartSummaryItem from "./cart-summary-item";
 
 interface CartSummaryProps {
   subtotalInCents: number;
+  freteInCents: number;
   totalInCents: number;
   products: Array<{
     id: string;
@@ -18,6 +19,7 @@ interface CartSummaryProps {
 
 const CartSummary = ({
   subtotalInCents,
+  freteInCents,
   totalInCents,
   products,
 }: CartSummaryProps) => {
@@ -35,11 +37,17 @@ const CartSummary = ({
         </div>
         <div className="flex justify-between">
           <p className="text-sm">Frete</p>
-          <p className="text-muted-foreground text-sm font-medium">GRÁTIS</p>
+          <p className="text-muted-foreground text-sm font-medium">
+            {freteInCents === 0 ? (
+              <span className="font-bold text-green-600">GRÁTIS</span>
+            ) : (
+              formatCentsToBRL(freteInCents)
+            )}
+          </p>
         </div>
         <div className="flex justify-between">
           <p className="text-sm">Total</p>
-          <p className="text-muted-foreground text-sm font-medium">
+          <p className="text-muted-foreground text-sm font-bold">
             {formatCentsToBRL(totalInCents)}
           </p>
         </div>

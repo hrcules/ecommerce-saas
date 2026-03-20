@@ -8,6 +8,9 @@ import { db } from "@/db";
 import { orderItemTable, orderTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
+// NOVO: Importando o Helper de Frete!
+import { calculateShipping } from "@/helpers/shipping";
+
 import {
   CreateCheckoutSessionSchema,
   createCheckoutSessionSchema,
@@ -41,7 +44,28 @@ export const createCheckoutSession = async (
       productVariant: { with: { product: true } },
     },
   });
+
+  // ==========================================
+  // NOVO: Lógica de Cálculo do Frete para o Stripe
+  // ==========================================
+  const store = await db.query.storeTable.findFirst();
+
+  // 1. Calculamos o subtotal baseado nos itens do pedido
+  const subtotalInCents = orderItems.reduce(
+    (acc, item) => acc + item.priceInCents * item.quantity,
+    0,
+  );
+
+  // 2. Usamos a mesma regra Sênior do frontend
+  const freteInCents = calculateShipping(
+    subtotalInCents,
+    store?.fixedShippingFeeInCents || 0,
+    store?.freeShippingThresholdInCents || null,
+  );
+  // ==========================================
+
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
   const checkoutSession = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -50,6 +74,21 @@ export const createCheckoutSession = async (
     metadata: {
       orderId,
     },
+
+    // NOVO: Injetando o frete de forma nativa no Stripe!
+    shipping_options: [
+      {
+        shipping_rate_data: {
+          type: "fixed_amount",
+          fixed_amount: {
+            amount: freteInCents,
+            currency: "brl", // Moeda Real
+          },
+          display_name: freteInCents === 0 ? "Frete Grátis" : "Frete Fixo",
+        },
+      },
+    ],
+
     line_items: orderItems.map((orderItem) => {
       return {
         price_data: {
@@ -65,5 +104,6 @@ export const createCheckoutSession = async (
       };
     }),
   });
+
   return { checkoutUrl: checkoutSession.url };
 };

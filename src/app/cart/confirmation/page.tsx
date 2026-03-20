@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import Footer from "@/components/common/footer";
 import Header from "@/components/common/header/index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
@@ -13,6 +12,9 @@ import CartSummary from "../components/cart-summary";
 import { formatAddress } from "../helpers/address";
 import FinishOrderButton from "./components/finish-order-button";
 import CartSteper from "../components/cart-steper";
+
+// NOVO: Importando o nosso Helper de Frete!
+import { calculateShipping } from "../../../helpers/shipping";
 
 interface ConfirmationPageProps {
   searchParams: Promise<{
@@ -33,7 +35,7 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
   }
 
   let products = [];
-  let totalInCents = 0;
+  let subtotalInCents = 0;
   let shippingAddress = null;
 
   if (variantId && quantity && addressId) {
@@ -60,7 +62,7 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
         imageUrl: variant.imageUrl,
       },
     ];
-    totalInCents = variant.priceInCents * Number(quantity);
+    subtotalInCents = variant.priceInCents * Number(quantity);
     shippingAddress = address;
   } else {
     const cart = await db.query.cartTable.findFirst({
@@ -91,12 +93,22 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
       priceInCents: item.productVariant.priceInCents,
       imageUrl: item.productVariant.imageUrl,
     }));
-    totalInCents = cart.items.reduce(
+    subtotalInCents = cart.items.reduce(
       (acc, item) => acc + item.productVariant.priceInCents * item.quantity,
       0,
     );
     shippingAddress = cart.shippingAddress;
   }
+
+  const store = await db.query.storeTable.findFirst();
+
+  const freteInCents = calculateShipping(
+    subtotalInCents,
+    store?.fixedShippingFeeInCents || 0,
+    store?.freeShippingThresholdInCents || null,
+  );
+
+  const totalInCents = subtotalInCents + freteInCents;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -126,7 +138,8 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
             </Card>
 
             <CartSummary
-              subtotalInCents={totalInCents}
+              subtotalInCents={subtotalInCents}
+              freteInCents={freteInCents}
               totalInCents={totalInCents}
               products={products}
             />

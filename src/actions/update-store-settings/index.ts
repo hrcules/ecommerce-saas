@@ -41,6 +41,16 @@ export async function updateStoreSettingsAction(formData: FormData) {
   const instagramUrl = formData.get("instagramUrl") as string;
   const whatsapp = formData.get("whatsapp") as string;
 
+  const fixedShippingFeeInCents = parseInt(
+    (formData.get("fixedShippingFeeInCents") as string) || "0",
+  );
+  const freeShippingThresholdStr = formData.get(
+    "freeShippingThresholdInCents",
+  ) as string | null;
+  const freeShippingThresholdInCents = freeShippingThresholdStr
+    ? parseInt(freeShippingThresholdStr)
+    : null;
+
   // Arquivos
   const logoFile = formData.get("logoFile") as File | null;
   const b1DesktopFile = formData.get("b1DesktopFile") as File | null;
@@ -104,6 +114,8 @@ export async function updateStoreSettingsAction(formData: FormData) {
       banner1MobileUrl,
       banner2DesktopUrl,
       banner2MobileUrl,
+      fixedShippingFeeInCents,
+      freeShippingThresholdInCents,
       updatedAt: new Date(),
     })
     .where(eq(storeTable.id, store.id));

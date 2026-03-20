@@ -10,6 +10,7 @@ import {
   X,
   Link as LinkIcon,
   Loader2,
+  Truck, // Ícone importado para o card de frete
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -48,6 +49,8 @@ interface SettingsFormProps {
     banner2MobileUrl: string | null;
     instagramUrl: string | null;
     whatsapp: string | null;
+    fixedShippingFeeInCents: number;
+    freeShippingThresholdInCents: number | null;
   };
 }
 
@@ -82,6 +85,11 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
       colorPrimary: initialData.colorPrimary,
       instagramUrl: initialData.instagramUrl || "",
       whatsapp: initialData.whatsapp || "",
+
+      fixedShippingFee: (initialData.fixedShippingFeeInCents / 100).toString(),
+      freeShippingThreshold: initialData.freeShippingThresholdInCents
+        ? (initialData.freeShippingThresholdInCents / 100).toString()
+        : "",
     },
   });
 
@@ -91,6 +99,22 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
     formData.append("colorPrimary", data.colorPrimary);
     if (data.instagramUrl) formData.append("instagramUrl", data.instagramUrl);
     if (data.whatsapp) formData.append("whatsapp", data.whatsapp);
+
+    // Converter Reais da tela para centavos para o banco
+    const fixedCents = Math.round(Number(data.fixedShippingFee) * 100);
+    formData.append("fixedShippingFeeInCents", fixedCents.toString());
+
+    if (data.freeShippingThreshold && Number(data.freeShippingThreshold) > 0) {
+      const thresholdCents = Math.round(
+        Number(data.freeShippingThreshold) * 100,
+      );
+      formData.append(
+        "freeShippingThresholdInCents",
+        thresholdCents.toString(),
+      );
+    } else {
+      formData.append("freeShippingThresholdInCents", ""); // Envia vazio para salvar null no banco
+    }
 
     if (logoFile) formData.append("logoFile", logoFile);
     if (!logoPreview && !logoFile) formData.append("removeLogo", "true");
@@ -277,6 +301,62 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Logística e Frete */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5" /> Logística e Frete
+            </CardTitle>
+            <CardDescription>
+              Defina o valor do frete padrão e o limite de gastos para o cliente
+              ganhar frete grátis.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="fixedShippingFee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor Fixo do Frete (R$)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex: 25.00"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="freeShippingThreshold"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Frete Grátis a partir de (R$) (Opcional)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex: 200.00 ou deixe vazio"
+                      {...field}
+                      value={field.value ?? ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 

@@ -12,6 +12,9 @@ export const updateStoreSettingsSchema = z.object({
   banner2MobileUrl: z.string().optional().nullable(),
   instagramUrl: z.string().optional().nullable(),
   whatsapp: z.string().optional().nullable(),
+
+  fixedShippingFee: z.string().min(1, "O valor do frete é obrigatório"),
+  freeShippingThreshold: z.string().optional().nullable(),
 });
 
 export type UpdateStoreSettingsInput = z.infer<
