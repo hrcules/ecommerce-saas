@@ -16,6 +16,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull(),
   image: text("image"),
+  role: text("role").default("customer").notNull(),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
@@ -81,6 +82,8 @@ export const storeTable = pgTable("store", {
     .default(0)
     .notNull(),
   freeShippingThresholdInCents: integer("free_shipping_threshold_in_cents"),
+
+  isActive: boolean("is_active").default(true).notNull(),
 
   ownerId: text("owner_id")
     .notNull()
