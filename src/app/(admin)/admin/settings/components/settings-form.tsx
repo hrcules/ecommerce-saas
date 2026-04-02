@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input";
 
 interface SettingsFormProps {
   initialData: {
+    id: string;
     name: string;
     colorPrimary: string;
     logoUrl: string | null;
@@ -51,6 +52,9 @@ interface SettingsFormProps {
     whatsapp: string | null;
     fixedShippingFeeInCents: number;
     freeShippingThresholdInCents: number | null;
+    stripePublicKey: string | null;
+    stripeSecretKey: string | null;
+    stripeWebhookSecret: string | null;
   };
 }
 
@@ -86,6 +90,10 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
       instagramUrl: initialData.instagramUrl || "",
       whatsapp: initialData.whatsapp || "",
 
+      stripePublicKey: initialData.stripePublicKey || "",
+      stripeSecretKey: initialData.stripeSecretKey || "",
+      stripeWebhookSecret: initialData.stripeWebhookSecret || "",
+
       fixedShippingFee: (initialData.fixedShippingFeeInCents / 100).toString(),
       freeShippingThreshold: initialData.freeShippingThresholdInCents
         ? (initialData.freeShippingThresholdInCents / 100).toString()
@@ -99,6 +107,13 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
     formData.append("colorPrimary", data.colorPrimary);
     if (data.instagramUrl) formData.append("instagramUrl", data.instagramUrl);
     if (data.whatsapp) formData.append("whatsapp", data.whatsapp);
+
+    if (data.stripePublicKey)
+      formData.append("stripePublicKey", data.stripePublicKey);
+    if (data.stripeSecretKey)
+      formData.append("stripeSecretKey", data.stripeSecretKey);
+    if (data.stripeWebhookSecret)
+      formData.append("stripeWebhookSecret", data.stripeWebhookSecret);
 
     // Converter Reais da tela para centavos para o banco
     const fixedCents = Math.round(Number(data.fixedShippingFee) * 100);
@@ -354,6 +369,86 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
                       disabled={isPending}
                     />
                   </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Pagamentos (Stripe) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LinkIcon className="h-5 w-5" /> Configuração de Pagamentos
+              (Stripe)
+            </CardTitle>
+            <CardDescription>
+              Conecte sua própria conta do Stripe para receber as vendas
+              diretamente.
+              <br />
+              <span className="text-xs font-bold text-amber-600">
+                ⚠️ Nunca compartilhe sua Chave Secreta com ninguém.
+              </span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="stripePublicKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Chave Pública (Publishable Key)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="pk_test_..."
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="stripeSecretKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Chave Secreta (Secret Key)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="sk_test_..."
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="stripeWebhookSecret"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Segredo do Webhook (Webhook Secret)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="whsec_..."
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground mt-1 text-[10px]">
+                    Configure seu Webhook no Stripe para apontar para:
+                    <code className="bg-muted ml-1 rounded px-1 py-0.5">
+                      {process.env.NEXT_PUBLIC_APP_URL}
+                      /api/stripe/webhook?storeId={initialData.id}
+                    </code>
+                  </p>
                 </FormItem>
               )}
             />

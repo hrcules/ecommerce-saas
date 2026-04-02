@@ -85,6 +85,10 @@ export const storeTable = pgTable("store", {
 
   isActive: boolean("is_active").default(true).notNull(),
 
+  stripePublicKey: text("stripe_public_key"),
+  stripeSecretKey: text("stripe_secret_key"),
+  stripeWebhookSecret: text("stripe_webhook_secret"),
+
   ownerId: text("owner_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

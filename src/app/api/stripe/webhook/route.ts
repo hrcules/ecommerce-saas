@@ -18,16 +18,34 @@ import {
 import { formatCentsToBRL } from "@/helpers/money";
 
 export const POST = async (request: Request) => {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return new NextResponse("Chaves ausentes", { status: 400 });
+  const { searchParams } = new URL(request.url);
+  const storeId = searchParams.get("storeId");
+
+  if (!storeId) {
+    return new NextResponse("storeId ausente na URL do Webhook", {
+      status: 400,
+    });
   }
+
+  const store = await db.query.storeTable.findFirst({
+    where: eq(storeTable.id, storeId),
+  });
+
+  if (!store || !store.stripeSecretKey || !store.stripeWebhookSecret) {
+    return new NextResponse(
+      "Loja não encontrada ou chaves do Stripe não configuradas",
+      { status: 400 },
+    );
+  }
+
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
     return new NextResponse("Assinatura ausente", { status: 400 });
   }
 
   const text = await request.text();
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  const stripe = new Stripe(store.stripeSecretKey);
 
   let event: Stripe.Event;
 
@@ -35,14 +53,17 @@ export const POST = async (request: Request) => {
     event = stripe.webhooks.constructEvent(
       text,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET,
+      store.stripeWebhookSecret,
     );
-  } catch {
+  } catch (error) {
+    console.error("❌ Erro na assinatura do webhook:", error);
     return new NextResponse("Erro na assinatura do webhook", { status: 400 });
   }
 
   if (event.type === "checkout.session.completed") {
-    console.log("🟢 [WEBHOOK RECEBIDO] Checkout session completed!");
+    console.log(
+      `🟢 [WEBHOOK RECEBIDO] Checkout session completed para a loja: ${store.name}`,
+    );
 
     const session = event.data.object as Stripe.Checkout.Session;
     const orderId = session.metadata?.orderId;
@@ -85,44 +106,36 @@ export const POST = async (request: Request) => {
       });
 
       if (order && order.shippingAddress) {
-        const store = await db.query.storeTable.findFirst({
-          where: eq(storeTable.id, order.storeId),
+        const owner = await db.query.user.findFirst({
+          where: eq(user.id, store.ownerId),
         });
 
-        if (store) {
-          const owner = await db.query.user.findFirst({
-            where: eq(user.id, store.ownerId),
-          });
+        const formattedPrice = formatCentsToBRL(order.totalPriceInCents);
 
-          const formattedPrice = formatCentsToBRL(order.totalPriceInCents);
+        await sendCustomerReceiptEmail(
+          order.shippingAddress.email,
+          order.shippingAddress.fullName,
+          order.orderNumber,
+          store.name,
+          formattedPrice,
+        );
 
-          await sendCustomerReceiptEmail(
-            order.shippingAddress.email,
-            order.shippingAddress.fullName,
+        if (owner && owner.email) {
+          await sendStoreOwnerNotificationEmail(
+            owner.email,
             order.orderNumber,
             store.name,
             formattedPrice,
           );
 
-          if (owner && owner.email) {
-            await sendStoreOwnerNotificationEmail(
-              owner.email,
-              order.orderNumber,
-              store.name,
-              formattedPrice,
-            );
+          await db.insert(notificationTable).values({
+            userId: owner.id,
+            title: "💰 Nova Venda Realizada!",
+            message: `O pedido #${order.orderNumber} no valor de ${formattedPrice} acabou de ser pago.`,
+            type: "sale",
+          });
 
-            await db.insert(notificationTable).values({
-              userId: owner.id,
-              title: "💰 Nova Venda Realizada!",
-              message: `O pedido #${order.orderNumber} no valor de ${formattedPrice} acabou de ser pago.`,
-              type: "sale",
-            });
-
-            console.log(
-              "✅ E-mails enviados e notificação criada com sucesso!",
-            );
-          }
+          console.log("✅ E-mails enviados e notificação criada com sucesso!");
         }
       }
     } catch (emailError) {

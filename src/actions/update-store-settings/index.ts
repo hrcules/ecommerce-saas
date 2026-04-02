@@ -41,6 +41,10 @@ export async function updateStoreSettingsAction(formData: FormData) {
   const instagramUrl = formData.get("instagramUrl") as string;
   const whatsapp = formData.get("whatsapp") as string;
 
+  const stripePublicKey = formData.get("stripePublicKey") as string;
+  const stripeSecretKey = formData.get("stripeSecretKey") as string;
+  const stripeWebhookSecret = formData.get("stripeWebhookSecret") as string;
+
   const fixedShippingFeeInCents = parseInt(
     (formData.get("fixedShippingFeeInCents") as string) || "0",
   );
@@ -116,6 +120,9 @@ export async function updateStoreSettingsAction(formData: FormData) {
       banner2MobileUrl,
       fixedShippingFeeInCents,
       freeShippingThresholdInCents,
+      stripePublicKey,
+      stripeSecretKey,
+      stripeWebhookSecret,
       updatedAt: new Date(),
     })
     .where(eq(storeTable.id, store.id));
