@@ -11,6 +11,8 @@ import CartSummary from "../components/cart-summary";
 import Addresses from "./components/addresses";
 import CartSteper from "../components/cart-steper";
 
+import { calculateShipping } from "../../../helpers/shipping";
+
 interface IdentificationPageProps {
   searchParams: Promise<{
     variantId?: string;
@@ -35,7 +37,7 @@ const IdentificationPage = async ({
   });
 
   let products = [];
-  let totalInCents = 0;
+  let subtotalInCents = 0;
   let defaultAddressId = null;
 
   if (variantId && quantity) {
@@ -58,7 +60,7 @@ const IdentificationPage = async ({
         imageUrl: variant.imageUrl,
       },
     ];
-    totalInCents = variant.priceInCents * Number(quantity);
+    subtotalInCents = variant.priceInCents * Number(quantity);
   } else {
     const cart = await db.query.cartTable.findFirst({
       where: (cart, { eq }) => eq(cart.userId, session.user.id),
@@ -88,12 +90,22 @@ const IdentificationPage = async ({
       priceInCents: item.productVariant.priceInCents,
       imageUrl: item.productVariant.imageUrl,
     }));
-    totalInCents = cart.items.reduce(
+    subtotalInCents = cart.items.reduce(
       (acc, item) => acc + item.productVariant.priceInCents * item.quantity,
       0,
     );
     defaultAddressId = cart.shippingAddress?.id || null;
   }
+
+  const store = await db.query.storeTable.findFirst();
+
+  const freteInCents = calculateShipping(
+    subtotalInCents,
+    store?.fixedShippingFeeInCents || 0,
+    store?.freeShippingThresholdInCents || null,
+  );
+
+  const totalInCents = subtotalInCents + freteInCents;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -112,7 +124,8 @@ const IdentificationPage = async ({
             />
 
             <CartSummary
-              subtotalInCents={totalInCents}
+              subtotalInCents={subtotalInCents}
+              freteInCents={freteInCents}
               totalInCents={totalInCents}
               products={products}
             />

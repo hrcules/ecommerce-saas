@@ -16,6 +16,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull(),
   image: text("image"),
+  role: text("role").default("customer").notNull(),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
@@ -76,6 +77,17 @@ export const storeTable = pgTable("store", {
 
   instagramUrl: text("instagram_url"),
   whatsapp: text("whatsapp"),
+
+  fixedShippingFeeInCents: integer("fixed_shipping_fee_in_cents")
+    .default(0)
+    .notNull(),
+  freeShippingThresholdInCents: integer("free_shipping_threshold_in_cents"),
+
+  isActive: boolean("is_active").default(true).notNull(),
+
+  stripePublicKey: text("stripe_public_key"),
+  stripeSecretKey: text("stripe_secret_key"),
+  stripeWebhookSecret: text("stripe_webhook_secret"),
 
   ownerId: text("owner_id")
     .notNull()

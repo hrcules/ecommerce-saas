@@ -48,7 +48,6 @@ const HeaderClient = ({ categories, store }: HeaderClientProps) => {
       {/* ======================= HEADER MOBILE ======================= */}
       <div className="flex items-center justify-between p-5 md:hidden">
         <Link href="/">
-          {/* Lógica Dinâmica da Logo (Mobile) */}
           {store.logoUrl ? (
             <Image
               src={store.logoUrl}

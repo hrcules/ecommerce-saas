@@ -10,6 +10,7 @@ import {
   X,
   Link as LinkIcon,
   Loader2,
+  Truck, // Ícone importado para o card de frete
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ import { Input } from "@/components/ui/input";
 
 interface SettingsFormProps {
   initialData: {
+    id: string;
     name: string;
     colorPrimary: string;
     logoUrl: string | null;
@@ -48,6 +50,11 @@ interface SettingsFormProps {
     banner2MobileUrl: string | null;
     instagramUrl: string | null;
     whatsapp: string | null;
+    fixedShippingFeeInCents: number;
+    freeShippingThresholdInCents: number | null;
+    stripePublicKey: string | null;
+    stripeSecretKey: string | null;
+    stripeWebhookSecret: string | null;
   };
 }
 
@@ -82,6 +89,15 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
       colorPrimary: initialData.colorPrimary,
       instagramUrl: initialData.instagramUrl || "",
       whatsapp: initialData.whatsapp || "",
+
+      stripePublicKey: initialData.stripePublicKey || "",
+      stripeSecretKey: initialData.stripeSecretKey || "",
+      stripeWebhookSecret: initialData.stripeWebhookSecret || "",
+
+      fixedShippingFee: (initialData.fixedShippingFeeInCents / 100).toString(),
+      freeShippingThreshold: initialData.freeShippingThresholdInCents
+        ? (initialData.freeShippingThresholdInCents / 100).toString()
+        : "",
     },
   });
 
@@ -91,6 +107,29 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
     formData.append("colorPrimary", data.colorPrimary);
     if (data.instagramUrl) formData.append("instagramUrl", data.instagramUrl);
     if (data.whatsapp) formData.append("whatsapp", data.whatsapp);
+
+    if (data.stripePublicKey)
+      formData.append("stripePublicKey", data.stripePublicKey);
+    if (data.stripeSecretKey)
+      formData.append("stripeSecretKey", data.stripeSecretKey);
+    if (data.stripeWebhookSecret)
+      formData.append("stripeWebhookSecret", data.stripeWebhookSecret);
+
+    // Converter Reais da tela para centavos para o banco
+    const fixedCents = Math.round(Number(data.fixedShippingFee) * 100);
+    formData.append("fixedShippingFeeInCents", fixedCents.toString());
+
+    if (data.freeShippingThreshold && Number(data.freeShippingThreshold) > 0) {
+      const thresholdCents = Math.round(
+        Number(data.freeShippingThreshold) * 100,
+      );
+      formData.append(
+        "freeShippingThresholdInCents",
+        thresholdCents.toString(),
+      );
+    } else {
+      formData.append("freeShippingThresholdInCents", ""); // Envia vazio para salvar null no banco
+    }
 
     if (logoFile) formData.append("logoFile", logoFile);
     if (!logoPreview && !logoFile) formData.append("removeLogo", "true");
@@ -277,6 +316,142 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Logística e Frete */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5" /> Logística e Frete
+            </CardTitle>
+            <CardDescription>
+              Defina o valor do frete padrão e o limite de gastos para o cliente
+              ganhar frete grátis.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="fixedShippingFee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor Fixo do Frete (R$)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex: 25.00"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="freeShippingThreshold"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Frete Grátis a partir de (R$) (Opcional)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex: 200.00 ou deixe vazio"
+                      {...field}
+                      value={field.value ?? ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Pagamentos (Stripe) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LinkIcon className="h-5 w-5" /> Configuração de Pagamentos
+              (Stripe)
+            </CardTitle>
+            <CardDescription>
+              Conecte sua própria conta do Stripe para receber as vendas
+              diretamente.
+              <br />
+              <span className="text-xs font-bold text-amber-600">
+                ⚠️ Nunca compartilhe sua Chave Secreta com ninguém.
+              </span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="stripePublicKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Chave Pública (Publishable Key)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="pk_test_..."
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="stripeSecretKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Chave Secreta (Secret Key)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="sk_test_..."
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="stripeWebhookSecret"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Segredo do Webhook (Webhook Secret)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="whsec_..."
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground mt-1 text-[10px]">
+                    Configure seu Webhook no Stripe para apontar para:
+                    <code className="bg-muted ml-1 rounded px-1 py-0.5">
+                      {process.env.NEXT_PUBLIC_APP_URL}
+                      /api/stripe/webhook?storeId={initialData.id}
+                    </code>
+                  </p>
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 
