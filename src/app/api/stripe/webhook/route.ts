@@ -105,33 +105,73 @@ export const POST = async (request: Request) => {
         with: { shippingAddress: true },
       });
 
+      // NOVO: Buscamos os itens DE NOVO, mas agora com o nome do produto!
+      const emailOrderItems = await db.query.orderItemTable.findMany({
+        where: eq(orderItemTable.orderId, orderId),
+        with: {
+          productVariant: {
+            with: { product: true },
+          },
+        },
+      });
+
       if (order && order.shippingAddress) {
         const owner = await db.query.user.findFirst({
           where: eq(user.id, store.ownerId),
         });
 
-        const formattedPrice = formatCentsToBRL(order.totalPriceInCents);
+        // =====================================
+        // MATEMÁTICA DO RECIBO
+        // =====================================
+        // 1. Calcula o Subtotal (Soma dos itens)
+        const subtotalInCents = emailOrderItems.reduce(
+          (acc, item) => acc + item.priceInCents * item.quantity,
+          0,
+        );
 
+        // 2. Calcula o Frete (Total - Subtotal)
+        const freteInCents = order.totalPriceInCents - subtotalInCents;
+
+        // 3. Monta o Array de Produtos para a Tabela
+        const formattedItems = emailOrderItems.map((item) => ({
+          name: `${item.productVariant.product.name} (${item.productVariant.name})`,
+          quantity: item.quantity,
+          priceFormatted: formatCentsToBRL(item.priceInCents * item.quantity),
+        }));
+
+        // 4. Formata os totais
+        const formattedSubtotal = formatCentsToBRL(subtotalInCents);
+        const formattedShipping = formatCentsToBRL(freteInCents);
+        const formattedTotal = formatCentsToBRL(order.totalPriceInCents);
+
+        // Chama a função do cliente passando as informações da tabela
         await sendCustomerReceiptEmail(
           order.shippingAddress.email,
           order.shippingAddress.fullName,
           order.orderNumber,
           store.name,
-          formattedPrice,
+          formattedItems,
+          formattedSubtotal,
+          formattedShipping,
+          formattedTotal,
         );
 
         if (owner && owner.email) {
+          // Chama a função do lojista passando as informações da tabela
           await sendStoreOwnerNotificationEmail(
             owner.email,
             order.orderNumber,
             store.name,
-            formattedPrice,
+            formattedItems,
+            formattedSubtotal,
+            formattedShipping,
+            formattedTotal,
           );
 
           await db.insert(notificationTable).values({
             userId: owner.id,
             title: "💰 Nova Venda Realizada!",
-            message: `O pedido #${order.orderNumber} no valor de ${formattedPrice} acabou de ser pago.`,
+            message: `O pedido #${order.orderNumber} no valor de ${formattedTotal} acabou de ser pago.`,
             type: "sale",
           });
 

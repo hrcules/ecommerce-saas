@@ -9,9 +9,13 @@ import {
   orderTable,
   productVariantTable,
   shippingAddressTable,
+  storeTable,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { createDirectOrderSchema } from "./schema";
+
+// NOVO: Importando a regra de frete
+import { calculateShipping } from "@/helpers/shipping";
 
 export const createDirectOrder = async (input: unknown) => {
   const parsedInput = createDirectOrderSchema.parse(input);
@@ -25,17 +29,23 @@ export const createDirectOrder = async (input: unknown) => {
     throw new Error("Unauthorized: Usuário não autenticado.");
   }
 
-  const store = await db.query.storeTable.findFirst();
-  if (!store) {
-    throw new Error("Internal Server Error: Loja não encontrada.");
-  }
-
+  // NOVO: Buscamos a variante e incluímos o produto para descobrir de qual loja ele é!
   const variant = await db.query.productVariantTable.findFirst({
     where: eq(productVariantTable.id, variantId),
+    with: { product: true },
   });
 
   if (!variant) {
     throw new Error("Bad Request: Variante de produto não encontrada.");
+  }
+
+  // NOVO: Agora buscamos a loja exata dona desse produto (Segurança SaaS)
+  const store = await db.query.storeTable.findFirst({
+    where: eq(storeTable.id, variant.product.storeId),
+  });
+
+  if (!store) {
+    throw new Error("Internal Server Error: Loja não encontrada.");
   }
 
   const address = await db.query.shippingAddressTable.findFirst({
@@ -48,7 +58,19 @@ export const createDirectOrder = async (input: unknown) => {
     );
   }
 
-  const totalInCents = variant.priceInCents * quantity;
+  // ==========================================
+  // NOVO: O cálculo correto do Total + Frete
+  // ==========================================
+  const subtotalInCents = variant.priceInCents * quantity;
+
+  const shippingInCents = calculateShipping(
+    subtotalInCents,
+    store.fixedShippingFeeInCents || 0,
+    store.freeShippingThresholdInCents || null,
+  );
+
+  const totalInCents = subtotalInCents + shippingInCents;
+  // ==========================================
 
   const timestamp = Date.now();
   const randomSuffix = Math.floor(Math.random() * 1000);
@@ -62,7 +84,7 @@ export const createDirectOrder = async (input: unknown) => {
         storeId: store.id,
         userId: session.user.id,
         shippingAddressId: addressId,
-        totalPriceInCents: totalInCents,
+        totalPriceInCents: totalInCents, // Agora salva o valor com frete!
         status: "pending",
         stripeCheckoutSessionId: "",
       })

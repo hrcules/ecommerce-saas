@@ -94,116 +94,147 @@ export default async function AdminOrdersPage({
                 Nenhum pedido encontrado neste período.
               </p>
             ) : (
-              orders.map((order) => (
-                <div
-                  key={order.id}
-                  className="bg-card flex flex-col gap-4 rounded-xl border p-5"
-                >
-                  {/* Cabeçalho do Pedido */}
-                  <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 md:flex-row md:items-center">
-                    <div>
-                      <div className="mb-1 flex items-center gap-3">
-                        <p className="text-lg font-bold">
-                          #{order.orderNumber}
-                        </p>
-                        {/* A MÁGICA ACONTECE AQUI: O nosso dropdown interativo! */}
-                        <OrderStatusSelector
-                          orderId={order.id}
-                          currentStatus={order.status}
-                        />
-                      </div>
-                      <p className="text-muted-foreground text-sm">
-                        {new Date(order.createdAt).toLocaleDateString("pt-BR", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
+              orders.map((order) => {
+                // ==========================================
+                // NOVO: MATEMÁTICA DO FRETE E SUBTOTAL
+                // ==========================================
+                const subtotalInCents = order.items.reduce(
+                  (acc, item) => acc + item.priceInCents * item.quantity,
+                  0,
+                );
+                const freteInCents = order.totalPriceInCents - subtotalInCents;
 
-                    <div className="flex flex-col md:items-end">
-                      <p className="text-primary text-2xl font-bold">
-                        {formatCentsToBRL(order.totalPriceInCents)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Corpo do Pedido: Informações Detalhadas */}
-                  <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
-                    {/* Coluna 1: Dados do Cliente */}
-                    <div className="space-y-2">
-                      <h4 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">
-                        Dados do Cliente
-                      </h4>
-                      {order.shippingAddress ? (
-                        <div className="space-y-1 text-sm">
-                          <p className="text-base font-medium">
-                            {order.shippingAddress.fullName}
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-card flex flex-col gap-4 rounded-xl border p-5 shadow-sm"
+                  >
+                    {/* Cabeçalho do Pedido */}
+                    <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 md:flex-row md:items-center">
+                      <div>
+                        <div className="mb-1 flex items-center gap-3">
+                          <p className="text-lg font-bold">
+                            #{order.orderNumber}
                           </p>
-                          <p>
-                            Email:{" "}
-                            <span className="text-muted-foreground">
-                              {order.shippingAddress.email}
-                            </span>
-                          </p>
-                          <p>
-                            Telefone:{" "}
-                            <span className="text-muted-foreground">
-                              {order.shippingAddress.phone}
-                            </span>
-                          </p>
-                          <p className="text-muted-foreground pt-2">
-                            {order.shippingAddress.address},{" "}
-                            {order.shippingAddress.number}
-                            {order.shippingAddress.complement &&
-                              ` - ${order.shippingAddress.complement}`}
-                            <br />
-                            {order.shippingAddress.city} -{" "}
-                            {order.shippingAddress.state} | CEP:{" "}
-                            {order.shippingAddress.zipCode}
-                          </p>
+                          <OrderStatusSelector
+                            orderId={order.id}
+                            currentStatus={order.status}
+                          />
                         </div>
-                      ) : (
                         <p className="text-muted-foreground text-sm">
-                          Endereço não encontrado.
+                          {new Date(order.createdAt).toLocaleDateString(
+                            "pt-BR",
+                            {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
                         </p>
-                      )}
+                      </div>
+
+                      <div className="flex flex-col md:items-end">
+                        {/* Mantemos o totalzão em destaque no topo para rápida visualização */}
+                        <p className="text-primary text-2xl font-bold">
+                          {formatCentsToBRL(order.totalPriceInCents)}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Coluna 2: Itens do Pedido */}
-                    <div className="space-y-3">
-                      <h4 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">
-                        Itens do Pedido ({order.items.length})
-                      </h4>
-                      <ul className="space-y-3">
-                        {order.items.map((item) => (
-                          <li
-                            key={item.id}
-                            className="bg-muted/30 flex items-start justify-between rounded-md p-2 text-sm"
-                          >
-                            <div className="flex flex-col">
+                    {/* Corpo do Pedido: Informações Detalhadas */}
+                    <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
+                      {/* Coluna 1: Dados do Cliente */}
+                      <div className="space-y-2">
+                        <h4 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">
+                          Dados de Envio
+                        </h4>
+                        {order.shippingAddress ? (
+                          <div className="space-y-1 text-sm">
+                            <p className="text-base font-medium">
+                              {order.shippingAddress.fullName}
+                            </p>
+                            <p>
+                              Email:{" "}
+                              <span className="text-muted-foreground">
+                                {order.shippingAddress.email}
+                              </span>
+                            </p>
+                            <p>
+                              Telefone:{" "}
+                              <span className="text-muted-foreground">
+                                {order.shippingAddress.phone}
+                              </span>
+                            </p>
+                            <p className="text-muted-foreground pt-2">
+                              {order.shippingAddress.address},{" "}
+                              {order.shippingAddress.number}
+                              {order.shippingAddress.complement &&
+                                ` - ${order.shippingAddress.complement}`}
+                              <br />
+                              {order.shippingAddress.city} -{" "}
+                              {order.shippingAddress.state} | CEP:{" "}
+                              {order.shippingAddress.zipCode}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground text-sm">
+                            Endereço não encontrado.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Coluna 2: Itens do Pedido E Resumo Financeiro */}
+                      <div className="space-y-3">
+                        <h4 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">
+                          Itens do Pedido ({order.items.length})
+                        </h4>
+                        <ul className="space-y-3">
+                          {order.items.map((item) => (
+                            <li
+                              key={item.id}
+                              className="bg-muted/30 flex items-start justify-between rounded-md p-2 text-sm"
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {item.quantity}x{" "}
+                                  {item.productVariant.product.name}
+                                </span>
+                                <span className="text-muted-foreground text-xs">
+                                  Variação: {item.productVariant.name}
+                                </span>
+                              </div>
                               <span className="font-medium">
-                                {item.quantity}x{" "}
-                                {item.productVariant.product.name}
+                                {formatCentsToBRL(
+                                  item.priceInCents * item.quantity,
+                                )}
                               </span>
-                              <span className="text-muted-foreground text-xs">
-                                Variação: {item.productVariant.name}
-                              </span>
-                            </div>
-                            <span className="font-medium">
-                              {formatCentsToBRL(
-                                item.priceInCents * item.quantity,
-                              )}
+                            </li>
+                          ))}
+                        </ul>
+
+                        <div className="mt-4 flex flex-col items-end space-y-1 border-t pt-3 text-sm">
+                          <div className="text-muted-foreground flex w-full justify-between sm:w-48">
+                            <span>Subtotal:</span>
+                            <span>{formatCentsToBRL(subtotalInCents)}</span>
+                          </div>
+                          <div className="text-muted-foreground flex w-full justify-between sm:w-48">
+                            <span>Frete:</span>
+                            <span>{formatCentsToBRL(freteInCents)}</span>
+                          </div>
+                          <div className="mt-1 flex w-full justify-between border-t pt-1 text-base font-bold sm:w-48">
+                            <span>Total:</span>
+                            <span className="text-primary">
+                              {formatCentsToBRL(order.totalPriceInCents)}
                             </span>
-                          </li>
-                        ))}
-                      </ul>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </CardContent>

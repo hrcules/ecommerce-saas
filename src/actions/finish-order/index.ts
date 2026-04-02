@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
 import { db } from "@/db";
@@ -9,8 +9,12 @@ import {
   cartTable,
   orderItemTable,
   orderTable,
+  storeTable,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
+
+// NOVO: Importando a regra de frete!
+import { calculateShipping } from "@/helpers/shipping";
 
 export const finishOrder = async () => {
   const session = await auth.api.getSession({
@@ -21,16 +25,11 @@ export const finishOrder = async () => {
     throw new Error("Unauthorized");
   }
 
-  const store = await db.query.storeTable.findFirst();
-  if (!store) {
-    throw new Error("Loja não encontrada");
-  }
-
+  // ==========================================
+  // NOVO: 1. Achamos o carrinho do cliente primeiro
+  // ==========================================
   const cart = await db.query.cartTable.findFirst({
-    where: and(
-      eq(cartTable.userId, session.user.id),
-      eq(cartTable.storeId, store.id),
-    ),
+    where: eq(cartTable.userId, session.user.id),
     with: {
       shippingAddress: true,
       items: {
@@ -48,10 +47,33 @@ export const finishOrder = async () => {
     throw new Error("Shipping address not found");
   }
 
-  const totalPriceInCents = cart.items.reduce(
+  // ==========================================
+  // NOVO: 2. Achamos a loja ESPECÍFICA dona desse carrinho (Trava SaaS)
+  // ==========================================
+  const store = await db.query.storeTable.findFirst({
+    where: eq(storeTable.id, cart.storeId),
+  });
+
+  if (!store) {
+    throw new Error("Loja não encontrada");
+  }
+
+  // ==========================================
+  // NOVO: 3. Cálculo perfeito com o Frete
+  // ==========================================
+  const subtotalInCents = cart.items.reduce(
     (acc, item) => acc + item.productVariant.priceInCents * item.quantity,
     0,
   );
+
+  const shippingInCents = calculateShipping(
+    subtotalInCents,
+    store.fixedShippingFeeInCents || 0,
+    store.freeShippingThresholdInCents || null,
+  );
+
+  const totalPriceInCents = subtotalInCents + shippingInCents;
+  // ==========================================
 
   const timestamp = Date.now();
   const randomSuffix = Math.floor(Math.random() * 1000);
@@ -70,7 +92,7 @@ export const finishOrder = async () => {
         orderNumber,
         storeId: store.id,
         userId: session.user.id,
-        totalPriceInCents,
+        totalPriceInCents, // Agora o valor inclui a taxa de entrega!
         shippingAddressId: cart.shippingAddress.id,
         status: "pending",
         stripeCheckoutSessionId: "",
@@ -85,7 +107,7 @@ export const finishOrder = async () => {
 
     const orderItemsPayload: Array<typeof orderItemTable.$inferInsert> =
       cart.items.map((item) => ({
-        orderId: order.id,
+        orderId: order.id as string,
         productVariantId: item.productVariant.id,
         quantity: item.quantity,
         priceInCents: item.productVariant.priceInCents,
