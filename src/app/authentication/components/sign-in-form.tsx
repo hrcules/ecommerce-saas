@@ -75,8 +75,19 @@ const SignInForm = () => {
   }
 
   const handleSignInWithGoogle = async () => {
+    const hostname = window.location.hostname;
+    const storeSlug = hostname.split(".")[0];
+
+    const isDev = process.env.NODE_ENV === "development";
+    const mainDomain = isDev
+      ? "http://localhost:3000"
+      : "https://usebewear.vercel.app";
+
+    const callbackURL = `${mainDomain}/api/redirect-hub?store=${storeSlug}`;
+
     await authClient.signIn.social({
       provider: "google",
+      callbackURL: callbackURL,
     });
   };
 

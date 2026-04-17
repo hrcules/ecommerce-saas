@@ -106,6 +106,13 @@ export default async function SuperAdminPage() {
                   <div className="text-muted-foreground flex flex-col text-sm sm:flex-row sm:gap-4">
                     <span>
                       <strong className="text-foreground font-medium">
+                        Id:
+                      </strong>{" "}
+                      {store.id}
+                    </span>
+                    <span className="hidden sm:inline">•</span>
+                    <span>
+                      <strong className="text-foreground font-medium">
                         Dono:
                       </strong>{" "}
                       {store.owner?.email || "Sem dono"}

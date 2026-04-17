@@ -7,8 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/providers/react-query";
 import Footer from "@/components/common/footer";
 
-import { db } from "@/db";
-
+// Font Poppins que você já configurou e gosta
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -16,19 +15,15 @@ const poppins = Poppins({
   display: "swap",
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  const store = await db.query.storeTable.findFirst();
-
-  const storeName = store?.name || "BEWEAR";
-
-  return {
-    title: {
-      default: storeName,
-      template: `${storeName} | %s`,
-    },
-    description: "Plataforma de E-commerce",
-  };
-}
+// Metadata agora focado na PLATAFORMA (Landing Page)
+export const metadata: Metadata = {
+  title: {
+    default: "BEWEAR | Sua vitrine digital em minutos",
+    template: "BEWEAR | %s",
+  },
+  description:
+    "A plataforma completa para lojistas criarem seu e-commerce com subdomínio próprio.",
+};
 
 export default function RootLayout({
   children,
@@ -38,14 +33,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} flex min-h-screen flex-col antialiased`}
+        className={`${poppins.variable} font-poppins flex min-h-screen flex-col antialiased`}
       >
         <ReactQueryProvider>
+          {/* O seu conteúdo (Landing Page ou Admin) renderiza aqui */}
           <main className="flex-1">{children}</main>
+
+          {/* Mantive o seu Footer original aqui na raiz */}
+          <Footer />
         </ReactQueryProvider>
 
-        <Toaster position="top-center" />
-        <Footer />
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );
