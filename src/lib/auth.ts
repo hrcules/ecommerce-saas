@@ -30,7 +30,11 @@ export const auth = betterAuth({
         process.env.NODE_ENV === "production" ? ".bewear.com.br" : ".lvh.me",
     },
   },
-  trustedOrigins: ["http://lvh.me:3000", "http://*.lvh.me:3000"],
+  trustedOrigins: [
+    "http://lvh.me:3000",
+    "http://*.lvh.me:3000",
+    "http://bewear.lvh.me:3000",
+  ],
 
   database: drizzleAdapter(db, {
     provider: "pg",

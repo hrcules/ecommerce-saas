@@ -176,8 +176,11 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
                 {session?.user && (
                   <Button
                     variant="ghost"
-                    className="text-muted-foreground w-full justify-start"
-                    onClick={() => authClient.signOut()}
+                    className="text-muted-foreground w-full cursor-pointer justify-start"
+                    onClick={async () => {
+                      await authClient.signOut();
+                      window.location.href = "/";
+                    }}
                   >
                     <LogOutIcon className="mr-2 h-5 w-5" />
                     Sair da Conta
