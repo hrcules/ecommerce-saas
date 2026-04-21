@@ -80,7 +80,7 @@ const SignInForm = () => {
 
     const isDev = process.env.NODE_ENV === "development";
     const mainDomain = isDev
-      ? "http://localhost:3000"
+      ? "http://lvh.me:3000"
       : "https://usebewear.vercel.app";
 
     const callbackURL = `${mainDomain}/api/redirect-hub?store=${storeSlug}`;

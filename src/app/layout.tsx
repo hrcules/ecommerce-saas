@@ -31,9 +31,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} font-poppins flex min-h-screen flex-col antialiased`}
+        className={`${poppins.variable} flex min-h-screen flex-col antialiased`}
+        suppressHydrationWarning
       >
         <ReactQueryProvider>
           {/* O seu conteúdo (Landing Page ou Admin) renderiza aqui */}

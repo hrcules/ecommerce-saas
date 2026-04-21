@@ -27,6 +27,7 @@ export default async function proxy(req: NextRequest) {
   const hostname = req.headers.get("host") || "";
   const rootDomains = [
     "localhost:3000",
+    "lvh.me:3000",
     "bewear.com.br",
     "usebewear.vercel.app",
   ];

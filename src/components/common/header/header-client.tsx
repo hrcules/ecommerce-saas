@@ -30,7 +30,14 @@ import Cart from "../cart";
 interface HeaderClientProps {
   categories: (typeof categoryTable.$inferSelect)[];
   store: typeof storeTable.$inferSelect;
-  session: any;
+  session: {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      image?: string | null;
+    };
+  } | null;
 }
 
 const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {

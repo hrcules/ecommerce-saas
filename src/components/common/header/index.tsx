@@ -1,17 +1,18 @@
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers"; // Importante!
 import { db } from "@/db";
 import { categoryTable } from "@/db/schema";
+import { auth } from "@/lib/auth"; // Importante!
 
 import HeaderClient from "./header-client";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
 
 const Header = async () => {
-  const store = await db.query.storeTable.findFirst();
-
+  // Lemos o cookie direto do servidor
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+
+  const store = await db.query.storeTable.findFirst();
 
   if (!store) {
     return null;
@@ -21,6 +22,7 @@ const Header = async () => {
     where: eq(categoryTable.storeId, store.id),
   });
 
+  // Passamos a sessão como propriedade
   return (
     <HeaderClient categories={categories} store={store} session={session} />
   );

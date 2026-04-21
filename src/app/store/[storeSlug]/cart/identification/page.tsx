@@ -11,7 +11,7 @@ import CartSummary from "../components/cart-summary";
 import Addresses from "./components/addresses";
 import CartSteper from "../components/cart-steper";
 
-import { calculateShipping } from "../../../helpers/shipping";
+import { calculateShipping } from "@/helpers/shipping";
 
 interface IdentificationPageProps {
   searchParams: Promise<{
