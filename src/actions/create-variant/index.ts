@@ -1,21 +1,20 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { db } from "@/db";
-import { productTable, productVariantTable, storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { productTable, productVariantTable } from "@/db/schema";
 import { r2 } from "@/lib/r2";
+import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ Nosso Escudo
 
-export async function createVariantAction(formData: FormData) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) throw new Error("Não autorizado");
+export const createVariantAction = tenantOwnerAction<
+  FormData,
+  { success: boolean }
+>(async (formData, ctx) => {
+  // 🛡️ Pegamos o ID da loja direto do contexto blindado!
+  const { storeId } = ctx;
 
   const productId = formData.get("productId") as string;
   const color = formData.get("color") as string;
@@ -32,17 +31,12 @@ export async function createVariantAction(formData: FormData) {
     );
   }
 
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
-
-  if (!store) throw new Error("Loja não encontrada");
-
   const parentProduct = await db.query.productTable.findFirst({
     where: eq(productTable.id, productId),
   });
 
-  if (!parentProduct || parentProduct.storeId !== store.id) {
+  // ✅ A verificação continua aqui, mas agora usando o storeId confiável
+  if (!parentProduct || parentProduct.storeId !== storeId) {
     throw new Error("Produto inválido ou não pertence a esta loja.");
   }
 
@@ -56,7 +50,8 @@ export async function createVariantAction(formData: FormData) {
     );
 
   const buffer = Buffer.from(await imageFile.arrayBuffer());
-  const fileName = `${store.id}/produtos/${parentProduct.id}/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+  // ✅ Usamos o storeId do contexto no R2
+  const fileName = `${storeId}/produtos/${parentProduct.id}/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
 
   await r2.send(
     new PutObjectCommand({
@@ -83,4 +78,4 @@ export async function createVariantAction(formData: FormData) {
   revalidatePath(`/admin/products/${productId}`);
 
   return { success: true };
-}
+});

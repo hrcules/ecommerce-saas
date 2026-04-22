@@ -1,54 +1,40 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import Stripe from "stripe";
 
 import { db } from "@/db";
 import { orderItemTable, orderTable, storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
-
 import { calculateShipping } from "@/helpers/shipping";
+import { authenticatedAction } from "@/lib/safe-action"; // ✅ Escudo
 
 import {
   CreateCheckoutSessionSchema,
   createCheckoutSessionSchema,
 } from "./schema";
 
-export const createCheckoutSession = async (
-  data: CreateCheckoutSessionSchema,
-) => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
+export const createCheckoutSession = authenticatedAction<
+  CreateCheckoutSessionSchema,
+  { checkoutUrl: string | null }
+>(async (data, ctx) => {
+  const { userId, storeId } = ctx;
   const { orderId } = createCheckoutSessionSchema.parse(data);
 
   const order = await db.query.orderTable.findFirst({
     where: eq(orderTable.id, orderId),
   });
 
-  if (!order) {
-    throw new Error("Order not found");
+  // 🛡️ Segurança Nível Militar: O pedido é MEU e é DESTA loja?
+  if (!order || order.userId !== userId || order.storeId !== storeId) {
+    throw new Error("Pedido não encontrado ou não autorizado.");
   }
 
-  if (order.userId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
-
+  // Precisamos buscar a loja na DB para pegar a Chave Secreta do Stripe e as regras de frete
   const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.id, order.storeId),
+    where: eq(storeTable.id, storeId),
   });
 
-  if (!store) {
-    throw new Error("Loja não encontrada");
-  }
-
-  if (!store.stripeSecretKey) {
+  if (!store || !store.stripeSecretKey) {
     throw new Error("Esta loja ainda não configurou os pagamentos.");
   }
 
@@ -109,4 +95,4 @@ export const createCheckoutSession = async (
   });
 
   return { checkoutUrl: checkoutSession.url };
-};
+});

@@ -1,19 +1,17 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/db";
-import { productTable, storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { productTable } from "@/db/schema";
+import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ O Escudo
 
-export async function updateProductDetailsAction(formData: FormData) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) throw new Error("Não autorizado");
+export const updateProductDetailsAction = tenantOwnerAction<
+  FormData, // Tipo do Input
+  { success: boolean } // Tipo do Retorno
+>(async (formData, ctx) => {
+  const { storeId } = ctx;
 
   const productId = formData.get("productId") as string;
   const name = formData.get("name") as string;
@@ -24,17 +22,12 @@ export async function updateProductDetailsAction(formData: FormData) {
     throw new Error("Preencha todos os campos obrigatórios.");
   }
 
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
-
-  if (!store) throw new Error("Loja não encontrada");
-
   const product = await db.query.productTable.findFirst({
     where: eq(productTable.id, productId),
   });
 
-  if (!product || product.storeId !== store.id) {
+  // 🛡️ Segurança extra
+  if (!product || product.storeId !== storeId) {
     throw new Error("Produto inválido ou sem permissão.");
   }
 
@@ -51,4 +44,4 @@ export async function updateProductDetailsAction(formData: FormData) {
   revalidatePath(`/admin/products/${productId}`);
 
   return { success: true };
-}
+});

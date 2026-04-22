@@ -1,34 +1,24 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/db";
-import { productTable, productVariantTable, storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { productTable, productVariantTable } from "@/db/schema";
+import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ O Escudo
 
-export async function deleteVariantAction(
-  variantId: string,
-  productId: string,
-) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) throw new Error("Não autorizado");
-
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
-
-  if (!store) throw new Error("Loja não encontrada");
+export const deleteVariantAction = tenantOwnerAction<
+  { variantId: string; productId: string }, // Tipo do Input
+  { success: boolean } // Tipo do Retorno
+>(async ({ variantId, productId }, ctx) => {
+  const { storeId } = ctx;
 
   const parentProduct = await db.query.productTable.findFirst({
     where: eq(productTable.id, productId),
   });
 
-  if (!parentProduct || parentProduct.storeId !== store.id) {
+  // 🛡️ Segurança: Garantimos que o produto a ser deletado pertence à loja do contexto
+  if (!parentProduct || parentProduct.storeId !== storeId) {
     throw new Error("Produto inválido ou sem permissão.");
   }
 
@@ -39,4 +29,4 @@ export async function deleteVariantAction(
   revalidatePath(`/admin/products/${productId}`);
 
   return { success: true };
-}
+});

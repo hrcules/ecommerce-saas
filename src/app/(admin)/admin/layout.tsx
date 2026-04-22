@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 
 import { Metadata } from "next";
 import NotificationBell from "@/components/common/notification-bell";
+import { getTenantStore } from "@/lib/tentat";
 
 export const metadata: Metadata = {
   title: "admin",
@@ -27,11 +28,18 @@ export default async function AdminLayout({
     redirect("/authentication");
   }
 
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
+  const store = await getTenantStore();
 
   if (!store) {
+    redirect("/"); // Loja não existe, manda pra Home (ou 404)
+  }
+
+  if (store.ownerId !== session.user.id) {
+    console.warn(
+      `Tentativa de invasão bloqueada! User: ${session.user.id} tentou acessar a loja: ${store.id}`,
+    );
+
+    // Expulsa o usuário intruso de volta para a vitrine pública da loja
     redirect("/");
   }
 

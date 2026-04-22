@@ -34,6 +34,7 @@ export const auth = betterAuth({
     "http://lvh.me:3000",
     "http://*.lvh.me:3000",
     "http://bewear.lvh.me:3000",
+    "http://testbewear.lvh.me:3000",
   ],
 
   database: drizzleAdapter(db, {

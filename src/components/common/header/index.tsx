@@ -5,6 +5,7 @@ import { categoryTable } from "@/db/schema";
 import { auth } from "@/lib/auth"; // Importante!
 
 import HeaderClient from "./header-client";
+import { getTenantStore } from "@/lib/tentat";
 
 const Header = async () => {
   // Lemos o cookie direto do servidor
@@ -12,7 +13,7 @@ const Header = async () => {
     headers: await headers(),
   });
 
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   if (!store) {
     return null;

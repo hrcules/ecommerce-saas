@@ -1,33 +1,29 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { headers } from "next/headers";
 
 import { db } from "@/db";
 import { cartItemTable, cartTable, productVariantTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
-
+import { authenticatedAction } from "@/lib/safe-action"; // ✅ Escudo do Comprador
 import { type AddProductToCartSchema, addProductToCartSchema } from "./schema";
 
-export const addProductToCart = async (data: AddProductToCartSchema) => {
+export const addProductToCart = authenticatedAction<
+  AddProductToCartSchema,
+  void
+>(async (data, ctx) => {
+  // 🛡️ Pegamos quem está comprando e ONDE está comprando
+  const { userId, storeId } = ctx;
+
   addProductToCartSchema.parse(data);
-  const session = await auth.api.getSession({ headers: await headers() });
-
-  if (!session?.user) {
-    throw new Error("User not authenticated");
-  }
-
-  const store = await db.query.storeTable.findFirst();
-  if (!store) {
-    throw new Error("Loja não encontrada");
-  }
 
   const productVariant = await db.query.productVariantTable.findFirst({
     where: eq(productVariantTable.id, data.productVariantId),
+    with: { product: true },
   });
 
-  if (!productVariant) {
-    throw new Error("Variante do produto não encontrada");
+  // 🛡️ Segurança Dupla: A variante existe e pertence à loja atual?
+  if (!productVariant || productVariant.product.storeId !== storeId) {
+    throw new Error("Variante do produto não encontrada nesta loja.");
   }
 
   if (productVariant.stock < data.quantity) {
@@ -37,10 +33,7 @@ export const addProductToCart = async (data: AddProductToCartSchema) => {
   }
 
   const cart = await db.query.cartTable.findFirst({
-    where: and(
-      eq(cartTable.userId, session.user.id),
-      eq(cartTable.storeId, store.id),
-    ),
+    where: and(eq(cartTable.userId, userId), eq(cartTable.storeId, storeId)),
   });
 
   let cartId = cart?.id;
@@ -49,8 +42,8 @@ export const addProductToCart = async (data: AddProductToCartSchema) => {
     const [newCart] = await db
       .insert(cartTable)
       .values({
-        userId: session.user.id,
-        storeId: store.id,
+        userId: userId,
+        storeId: storeId,
       })
       .returning();
     cartId = newCart.id;
@@ -86,4 +79,4 @@ export const addProductToCart = async (data: AddProductToCartSchema) => {
     productVariantId: data.productVariantId,
     quantity: data.quantity,
   });
-};
+});

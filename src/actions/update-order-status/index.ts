@@ -2,30 +2,24 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 
 import { db } from "@/db";
-import { orderTable, storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { orderTable } from "@/db/schema";
+import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ O Escudo
 
-export async function updateOrderStatusAction(
-  orderId: string,
-  newStatus: string,
-) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Não autorizado");
-
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
-  if (!store) throw new Error("Loja não encontrada");
+export const updateOrderStatusAction = tenantOwnerAction<
+  { orderId: string; newStatus: string }, // Tipo do Input
+  { success: boolean } // Tipo do Retorno
+>(async ({ orderId, newStatus }, ctx) => {
+  const { storeId } = ctx;
 
   const order = await db.query.orderTable.findFirst({
     where: eq(orderTable.id, orderId),
   });
 
-  if (!order || order.storeId !== store.id) {
-    throw new Error("Pedido não encontrado ou não pertence à tua loja.");
+  // 🛡️ Segurança: Garantimos que o pedido pertence à loja atual
+  if (!order || order.storeId !== storeId) {
+    throw new Error("Pedido não encontrado ou não pertence à sua loja.");
   }
 
   await db
@@ -37,4 +31,4 @@ export async function updateOrderStatusAction(
   revalidatePath("/orders");
 
   return { success: true };
-}
+});

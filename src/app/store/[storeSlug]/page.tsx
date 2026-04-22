@@ -6,9 +6,10 @@ import Header from "@/components/common/header/index";
 import { ProductList } from "@/components/common/product-list";
 import { db } from "@/db";
 import { categoryTable, productTable } from "@/db/schema";
+import { getTenantStore } from "@/lib/tentat";
 
 export default async function Home() {
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   if (!store) {
     return (

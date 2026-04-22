@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { cartTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { getTenantStore } from "@/lib/tentat";
 
 export const getCart = async () => {
   const session = await auth.api.getSession({
@@ -16,7 +17,7 @@ export const getCart = async () => {
     return null;
   }
 
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   if (!store) {
     return null;

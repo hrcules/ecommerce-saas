@@ -8,6 +8,7 @@ import ReactQueryProvider from "@/providers/react-query";
 import Footer from "@/components/common/footer";
 
 import { db } from "@/db";
+import { getTenantStore } from "@/lib/tentat";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -17,7 +18,7 @@ const poppins = Poppins({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   const storeName = store?.name || "BEWEAR";
 

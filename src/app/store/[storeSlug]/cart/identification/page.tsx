@@ -12,6 +12,7 @@ import Addresses from "./components/addresses";
 import CartSteper from "../components/cart-steper";
 
 import { calculateShipping } from "@/helpers/shipping";
+import { getTenantStore } from "@/lib/tentat";
 
 interface IdentificationPageProps {
   searchParams: Promise<{
@@ -97,7 +98,7 @@ const IdentificationPage = async ({
     defaultAddressId = cart.shippingAddress?.id || null;
   }
 
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   const freteInCents = calculateShipping(
     subtotalInCents,
