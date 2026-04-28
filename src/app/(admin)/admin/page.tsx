@@ -83,7 +83,9 @@ export default async function AdminDashboardPage({
     with: { variants: true },
   });
 
-  const successfulOrders = orders.filter((o) => o.status !== "canceled");
+  const successfulOrders = orders.filter(
+    (o) => o.status !== "pending" && o.status !== "canceled",
+  );
   const totalRevenueInCents = successfulOrders.reduce(
     (acc, order) => acc + order.totalPriceInCents,
     0,
