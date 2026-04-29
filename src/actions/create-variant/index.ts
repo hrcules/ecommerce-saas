@@ -7,13 +7,12 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { db } from "@/db";
 import { productTable, productVariantTable } from "@/db/schema";
 import { r2 } from "@/lib/r2";
-import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ Nosso Escudo
+import { tenantOwnerAction } from "@/lib/safe-action";
 
 export const createVariantAction = tenantOwnerAction<
   FormData,
   { success: boolean }
 >(async (formData, ctx) => {
-  // 🛡️ Pegamos o ID da loja direto do contexto blindado!
   const { storeId } = ctx;
 
   const productId = formData.get("productId") as string;
@@ -21,13 +20,19 @@ export const createVariantAction = tenantOwnerAction<
   const size = formData.get("size") as string;
   const priceInput = formData.get("price") as string;
   const stockInput = formData.get("stock") as string;
+
   const imageFile = formData.get("image") as File | null;
+  const previousImageUrl = formData.get("previousImageUrl") as string | null;
 
   const name = color;
 
-  if (!productId || !color || !size || !priceInput || !imageFile) {
+  if (!productId || !color || !size || !priceInput) {
+    throw new Error("Preencha todos os campos obrigatórios.");
+  }
+
+  if (!imageFile?.size && !previousImageUrl) {
     throw new Error(
-      "Preencha todos os campos obrigatórios e envie uma imagem.",
+      "Envie uma imagem ou utilize a imagem de uma variante existente.",
     );
   }
 
@@ -35,7 +40,6 @@ export const createVariantAction = tenantOwnerAction<
     where: eq(productTable.id, productId),
   });
 
-  // ✅ A verificação continua aqui, mas agora usando o storeId confiável
   if (!parentProduct || parentProduct.storeId !== storeId) {
     throw new Error("Produto inválido ou não pertence a esta loja.");
   }
@@ -49,20 +53,25 @@ export const createVariantAction = tenantOwnerAction<
       "-",
     );
 
-  const buffer = Buffer.from(await imageFile.arrayBuffer());
-  // ✅ Usamos o storeId do contexto no R2
-  const fileName = `${storeId}/produtos/${parentProduct.id}/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+  let imageUrl = "";
 
-  await r2.send(
-    new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: fileName,
-      Body: buffer,
-      ContentType: imageFile.type,
-    }),
-  );
+  if (imageFile && imageFile.size > 0) {
+    const buffer = Buffer.from(await imageFile.arrayBuffer());
+    const fileName = `${storeId}/produtos/${parentProduct.id}/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
 
-  const imageUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
+    await r2.send(
+      new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: fileName,
+        Body: buffer,
+        ContentType: imageFile.type,
+      }),
+    );
+
+    imageUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
+  } else if (previousImageUrl) {
+    imageUrl = previousImageUrl;
+  }
 
   await db.insert(productVariantTable).values({
     productId,

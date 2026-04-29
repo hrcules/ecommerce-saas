@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { ChevronLeft, Plus } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -184,6 +184,17 @@ export default async function EditProductPage({
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
+                          <CreateVariantDialog
+                            productId={product.id}
+                            existingColors={existingColors}
+                            isDuplicateMode={true}
+                            initialData={{
+                              priceInCents: variant.priceInCents,
+                              stock: variant.stock,
+                              color: variant.color,
+                              imageUrl: variant.imageUrl,
+                            }}
+                          />
                           <EditVariantDialog
                             productId={product.id}
                             existingColors={existingColors}

@@ -29,7 +29,7 @@ export function OrderStatusSelector({
   const handleStatusChange = (newStatus: string) => {
     startTransition(async () => {
       try {
-        await updateOrderStatusAction(orderId, newStatus);
+        await updateOrderStatusAction({ orderId, newStatus });
         toast.success("Status atualizado com sucesso!");
       } catch {
         toast.error("Erro ao atualizar o status do pedido.");
