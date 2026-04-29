@@ -1,7 +1,6 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 
 import { db } from "@/db";
 import {
@@ -11,37 +10,33 @@ import {
   shippingAddressTable,
   storeTable,
 } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { authenticatedAction } from "@/lib/safe-action"; // ✅ Escudo
 import { createDirectOrderSchema } from "./schema";
-
-// NOVO: Importando a regra de frete
 import { calculateShipping } from "@/helpers/shipping";
 
-export const createDirectOrder = async (input: unknown) => {
+export const createDirectOrder = authenticatedAction<
+  unknown,
+  { orderId: string }
+>(async (input, ctx) => {
+  const { userId, storeId } = ctx;
+
   const parsedInput = createDirectOrderSchema.parse(input);
   const { variantId, quantity, addressId } = parsedInput;
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user.id) {
-    throw new Error("Unauthorized: Usuário não autenticado.");
-  }
-
-  // NOVO: Buscamos a variante e incluímos o produto para descobrir de qual loja ele é!
   const variant = await db.query.productVariantTable.findFirst({
     where: eq(productVariantTable.id, variantId),
     with: { product: true },
   });
 
-  if (!variant) {
-    throw new Error("Bad Request: Variante de produto não encontrada.");
+  // 🛡️ Impedimos que alguém crie pedido direto de uma variante de outra loja
+  if (!variant || variant.product.storeId !== storeId) {
+    throw new Error(
+      "Bad Request: Variante de produto não encontrada nesta loja.",
+    );
   }
 
-  // NOVO: Agora buscamos a loja exata dona desse produto (Segurança SaaS)
   const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.id, variant.product.storeId),
+    where: eq(storeTable.id, storeId),
   });
 
   if (!store) {
@@ -52,15 +47,13 @@ export const createDirectOrder = async (input: unknown) => {
     where: eq(shippingAddressTable.id, addressId),
   });
 
-  if (!address || address.userId !== session.user.id) {
+  // 🛡️ Garantimos que o comprador só pode usar um endereço que seja DELE
+  if (!address || address.userId !== userId) {
     throw new Error(
       "Bad Request: Endereço inválido ou não pertence ao usuário.",
     );
   }
 
-  // ==========================================
-  // NOVO: O cálculo correto do Total + Frete
-  // ==========================================
   const subtotalInCents = variant.priceInCents * quantity;
 
   const shippingInCents = calculateShipping(
@@ -70,7 +63,6 @@ export const createDirectOrder = async (input: unknown) => {
   );
 
   const totalInCents = subtotalInCents + shippingInCents;
-  // ==========================================
 
   const timestamp = Date.now();
   const randomSuffix = Math.floor(Math.random() * 1000);
@@ -81,10 +73,10 @@ export const createDirectOrder = async (input: unknown) => {
       .insert(orderTable)
       .values({
         orderNumber,
-        storeId: store.id,
-        userId: session.user.id,
+        storeId: storeId, // ✅ Usamos o ID blindado do contexto
+        userId: userId, // ✅ Usamos o ID blindado do comprador
         shippingAddressId: addressId,
-        totalPriceInCents: totalInCents, // Agora salva o valor com frete!
+        totalPriceInCents: totalInCents,
         status: "pending",
         stripeCheckoutSessionId: "",
       })
@@ -102,4 +94,4 @@ export const createDirectOrder = async (input: unknown) => {
     console.error("Erro ao criar pedido direto:", error);
     throw new Error("Internal Server Error: Falha ao processar o pedido.");
   }
-};
+});

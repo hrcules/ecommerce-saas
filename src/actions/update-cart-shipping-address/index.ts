@@ -1,35 +1,29 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { eq, and } from "drizzle-orm";
 
 import { db } from "@/db";
 import { cartTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { authenticatedAction } from "@/lib/safe-action"; // ✅ Escudo
 
 import {
   UpdateCartShippingAddressSchema,
   updateCartShippingAddressSchema,
 } from "./schema";
 
-export const updateCartShippingAddress = async (
-  data: UpdateCartShippingAddressSchema,
-) => {
+export const updateCartShippingAddress = authenticatedAction<
+  UpdateCartShippingAddressSchema,
+  { success: boolean }
+>(async (data, ctx) => {
+  const { userId, storeId } = ctx;
+
   updateCartShippingAddressSchema.parse(data);
-
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
 
   const shippingAddress = await db.query.shippingAddressTable.findFirst({
     where: (shippingAddress, { eq, and }) =>
       and(
         eq(shippingAddress.id, data.shippingAddressId),
-        eq(shippingAddress.userId, session.user.id),
+        eq(shippingAddress.userId, userId), // ✅ Usa o ID blindado do contexto
       ),
   });
 
@@ -37,8 +31,10 @@ export const updateCartShippingAddress = async (
     throw new Error("Shipping address not found or unauthorized");
   }
 
+  // 🛡️ O BUG MORAVA AQUI: Agora garantimos que estamos atualizando o carrinho da loja certa!
   const cart = await db.query.cartTable.findFirst({
-    where: (cart, { eq }) => eq(cart.userId, session.user.id),
+    where: (cart, { eq, and }) =>
+      and(eq(cart.userId, userId), eq(cart.storeId, storeId)),
   });
 
   if (!cart) {
@@ -53,4 +49,4 @@ export const updateCartShippingAddress = async (
     .where(eq(cartTable.id, cart.id));
 
   return { success: true };
-};
+});

@@ -2,28 +2,16 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 
 import { db } from "@/db";
 import { storeTable, user } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { superAdminAction } from "@/lib/safe-action"; // ✅ Escudo Super Admin
 import { CreateStoreInput, createStoreSchema } from "./schema";
 
-export async function toggleStoreStatus(
-  storeId: string,
-  currentStatus: boolean,
-) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Não autorizado");
-
-  const dbUser = await db.query.user.findFirst({
-    where: eq(user.id, session.user.id),
-  });
-
-  if (dbUser?.role !== "superadmin") {
-    throw new Error("Acesso negado. Apenas o Super Admin pode fazer isso.");
-  }
-
+export const toggleStoreStatus = superAdminAction<
+  { storeId: string; currentStatus: boolean },
+  { success: boolean }
+>(async ({ storeId, currentStatus }) => {
   await db
     .update(storeTable)
     .set({ isActive: !currentStatus, updatedAt: new Date() })
@@ -33,17 +21,12 @@ export async function toggleStoreStatus(
   revalidatePath("/");
 
   return { success: true };
-}
+});
 
-export async function createStore(data: CreateStoreInput) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Não autorizado");
-
-  const dbUser = await db.query.user.findFirst({
-    where: eq(user.id, session.user.id),
-  });
-  if (dbUser?.role !== "superadmin") throw new Error("Acesso negado");
-
+export const createStore = superAdminAction<
+  CreateStoreInput,
+  { success: boolean }
+>(async (data) => {
   const { name, slug, ownerEmail } = createStoreSchema.parse(data);
 
   const merchant = await db.query.user.findFirst({
@@ -72,4 +55,4 @@ export async function createStore(data: CreateStoreInput) {
 
   revalidatePath("/super-admin");
   return { success: true };
-}
+});

@@ -1,10 +1,12 @@
 "use server";
 
 import { headers } from "next/headers";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { cartTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { getTenantStore } from "@/lib/tentat";
 
 export const getCart = async () => {
   const session = await auth.api.getSession({
@@ -12,18 +14,20 @@ export const getCart = async () => {
   });
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    return null;
   }
 
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   if (!store) {
-    throw new Error("Loja não encontrada no sistema.");
+    return null;
   }
 
   const cart = await db.query.cartTable.findFirst({
-    where: (cart, { eq, and }) =>
-      and(eq(cart.userId, session.user.id), eq(cart.storeId, store.id)),
+    where: and(
+      eq(cartTable.userId, session.user.id),
+      eq(cartTable.storeId, store.id),
+    ),
     with: {
       shippingAddress: true,
       items: {
@@ -38,6 +42,7 @@ export const getCart = async () => {
     },
   });
 
+  // Se não existe carrinho no banco, criamos um novo para o usuário
   if (!cart) {
     const [newCart] = await db
       .insert(cartTable)
@@ -55,6 +60,7 @@ export const getCart = async () => {
     };
   }
 
+  // Retornamos o carrinho com o cálculo do total
   return {
     ...cart,
     totalPriceInCents: cart.items.reduce(

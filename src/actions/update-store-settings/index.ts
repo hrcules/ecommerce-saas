@@ -2,13 +2,12 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { db } from "@/db";
 import { storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
 import { r2 } from "@/lib/r2";
+import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ O Escudo
 
 async function uploadFileToR2(file: File, storeId: string, prefix: string) {
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -26,12 +25,15 @@ async function uploadFileToR2(file: File, storeId: string, prefix: string) {
   return `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
 }
 
-export async function updateStoreSettingsAction(formData: FormData) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Não autorizado");
+export const updateStoreSettingsAction = tenantOwnerAction<
+  FormData,
+  { success: boolean }
+>(async (formData, ctx) => {
+  const { storeId } = ctx;
 
+  // Precisamos buscar a loja novamente para pegar as URLs antigas das imagens
   const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
+    where: eq(storeTable.id, storeId),
   });
 
   if (!store) throw new Error("Loja não encontrada");
@@ -80,31 +82,23 @@ export async function updateStoreSettingsAction(formData: FormData) {
   // --- Processamento de Uploads ---
   if (removeLogo) logoUrl = null;
   else if (logoFile && logoFile.size > 0)
-    logoUrl = await uploadFileToR2(logoFile, store.id, "logo");
+    logoUrl = await uploadFileToR2(logoFile, storeId, "logo");
 
   if (removeB1D) banner1DesktopUrl = null;
   else if (b1DesktopFile && b1DesktopFile.size > 0)
-    banner1DesktopUrl = await uploadFileToR2(
-      b1DesktopFile,
-      store.id,
-      "b1-desk",
-    );
+    banner1DesktopUrl = await uploadFileToR2(b1DesktopFile, storeId, "b1-desk");
 
   if (removeB1M) banner1MobileUrl = null;
   else if (b1MobileFile && b1MobileFile.size > 0)
-    banner1MobileUrl = await uploadFileToR2(b1MobileFile, store.id, "b1-mob");
+    banner1MobileUrl = await uploadFileToR2(b1MobileFile, storeId, "b1-mob");
 
   if (removeB2D) banner2DesktopUrl = null;
   else if (b2DesktopFile && b2DesktopFile.size > 0)
-    banner2DesktopUrl = await uploadFileToR2(
-      b2DesktopFile,
-      store.id,
-      "b2-desk",
-    );
+    banner2DesktopUrl = await uploadFileToR2(b2DesktopFile, storeId, "b2-desk");
 
   if (removeB2M) banner2MobileUrl = null;
   else if (b2MobileFile && b2MobileFile.size > 0)
-    banner2MobileUrl = await uploadFileToR2(b2MobileFile, store.id, "b2-mob");
+    banner2MobileUrl = await uploadFileToR2(b2MobileFile, storeId, "b2-mob");
 
   await db
     .update(storeTable)
@@ -125,10 +119,10 @@ export async function updateStoreSettingsAction(formData: FormData) {
       stripeWebhookSecret,
       updatedAt: new Date(),
     })
-    .where(eq(storeTable.id, store.id));
+    .where(eq(storeTable.id, storeId)); // 🛡️ Segurança: Atualiza apenas a loja do contexto
 
   revalidatePath("/admin/settings");
   revalidatePath("/");
 
   return { success: true };
-}
+});

@@ -5,6 +5,7 @@ import Header from "@/components/common/header/index";
 import { ProductGrid } from "@/components/common/product-list";
 import { db } from "@/db";
 import { categoryTable } from "@/db/schema";
+import { getTenantStore } from "@/lib/tentat";
 
 interface CategoryPageProps {
   params: Promise<{
@@ -15,7 +16,7 @@ interface CategoryPageProps {
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
 
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   if (!store) {
     return (

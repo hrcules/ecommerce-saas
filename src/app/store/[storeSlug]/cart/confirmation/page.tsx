@@ -14,7 +14,8 @@ import FinishOrderButton from "./components/finish-order-button";
 import CartSteper from "../components/cart-steper";
 
 // NOVO: Importando o nosso Helper de Frete!
-import { calculateShipping } from "../../../helpers/shipping";
+import { calculateShipping } from "@/helpers/shipping";
+import { getTenantStore } from "@/lib/tentat";
 
 interface ConfirmationPageProps {
   searchParams: Promise<{
@@ -100,7 +101,7 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
     shippingAddress = cart.shippingAddress;
   }
 
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   const freteInCents = calculateShipping(
     subtotalInCents,

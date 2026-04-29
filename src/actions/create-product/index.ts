@@ -1,27 +1,18 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { db } from "@/db";
-import { productTable, productVariantTable, storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { productTable, productVariantTable } from "@/db/schema";
 import { r2 } from "@/lib/r2";
+import { tenantOwnerAction } from "@/lib/safe-action";
 
-export async function createProductAction(formData: FormData) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) throw new Error("Não autorizado");
-
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
-
-  if (!store) throw new Error("Loja não encontrada");
+export const createProductAction = tenantOwnerAction<
+  FormData,
+  { success: boolean }
+>(async (formData, ctx) => {
+  const { storeId } = ctx;
 
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
@@ -50,6 +41,7 @@ export async function createProductAction(formData: FormData) {
       .replace(/[^a-z0-9]+/g, "-") +
     "-" +
     Date.now();
+
   const variantSlug =
     `${productSlug}-${color.toLowerCase()}-${size.toLowerCase()}`.replace(
       /[^a-z0-9]+/g,
@@ -60,7 +52,8 @@ export async function createProductAction(formData: FormData) {
 
   if (imageFile && imageFile.size > 0) {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const fileName = `${store.id}/produtos/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+
+    const fileName = `${storeId}/produtos/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
 
     await r2.send(
       new PutObjectCommand({
@@ -82,7 +75,7 @@ export async function createProductAction(formData: FormData) {
         description,
         slug: productSlug,
         categoryId,
-        storeId: store.id,
+        storeId: storeId,
       })
       .returning();
 
@@ -100,4 +93,4 @@ export async function createProductAction(formData: FormData) {
 
   revalidatePath("/admin/products");
   return { success: true };
-}
+});

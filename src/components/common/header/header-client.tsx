@@ -30,11 +30,17 @@ import Cart from "../cart";
 interface HeaderClientProps {
   categories: (typeof categoryTable.$inferSelect)[];
   store: typeof storeTable.$inferSelect;
+  session: {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      image?: string | null;
+    };
+  } | null;
 }
 
-const HeaderClient = ({ categories, store }: HeaderClientProps) => {
-  const { data: session } = authClient.useSession();
-
+const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
   const getInitials = (name?: string | null) => {
     if (!name) return "??";
     const parts = name.split(" ");
@@ -170,8 +176,11 @@ const HeaderClient = ({ categories, store }: HeaderClientProps) => {
                 {session?.user && (
                   <Button
                     variant="ghost"
-                    className="text-muted-foreground w-full justify-start"
-                    onClick={() => authClient.signOut()}
+                    className="text-muted-foreground w-full cursor-pointer justify-start"
+                    onClick={async () => {
+                      await authClient.signOut();
+                      window.location.href = "/";
+                    }}
                   >
                     <LogOutIcon className="mr-2 h-5 w-5" />
                     Sair da Conta

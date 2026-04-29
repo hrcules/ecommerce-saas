@@ -24,10 +24,12 @@ export function OrderStatusSelector({
 }: OrderStatusSelectorProps) {
   const [isPending, startTransition] = useTransition();
 
+  console.log("OrderId: ", orderId, " Current Status: ", currentStatus);
+
   const handleStatusChange = (newStatus: string) => {
     startTransition(async () => {
       try {
-        await updateOrderStatusAction(orderId, newStatus);
+        await updateOrderStatusAction({ orderId, newStatus });
         toast.success("Status atualizado com sucesso!");
       } catch {
         toast.error("Erro ao atualizar o status do pedido.");
@@ -49,6 +51,7 @@ export function OrderStatusSelector({
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="pending">Pendente</SelectItem>
           <SelectItem value="paid">Pago (A Preparar)</SelectItem>
           <SelectItem value="shipped">Enviado</SelectItem>
           <SelectItem value="delivered">Entregue</SelectItem>

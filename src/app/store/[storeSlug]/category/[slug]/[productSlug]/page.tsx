@@ -6,10 +6,11 @@ import Header from "@/components/common/header/index";
 import { ProductList } from "@/components/common/product-list";
 import { db } from "@/db";
 import { productTable, productVariantTable } from "@/db/schema";
-import { formatCentsToBRL } from "@/helpers/money";
 
 import ProductActions from "./components/product-actions";
 import VariantSelector from "./components/variant-selector";
+
+import { getTenantStore } from "@/lib/tentat";
 
 interface ProductPageProps {
   params: Promise<{
@@ -21,7 +22,7 @@ interface ProductPageProps {
 const ProductPage = async ({ params }: ProductPageProps) => {
   const { slug, productSlug } = await params;
 
-  const store = await db.query.storeTable.findFirst();
+  const store = await getTenantStore();
 
   if (!store) {
     return (

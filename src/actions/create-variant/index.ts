@@ -1,48 +1,46 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { db } from "@/db";
-import { productTable, productVariantTable, storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { productTable, productVariantTable } from "@/db/schema";
 import { r2 } from "@/lib/r2";
+import { tenantOwnerAction } from "@/lib/safe-action";
 
-export async function createVariantAction(formData: FormData) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) throw new Error("Não autorizado");
+export const createVariantAction = tenantOwnerAction<
+  FormData,
+  { success: boolean }
+>(async (formData, ctx) => {
+  const { storeId } = ctx;
 
   const productId = formData.get("productId") as string;
   const color = formData.get("color") as string;
   const size = formData.get("size") as string;
   const priceInput = formData.get("price") as string;
   const stockInput = formData.get("stock") as string;
+
   const imageFile = formData.get("image") as File | null;
+  const previousImageUrl = formData.get("previousImageUrl") as string | null;
 
   const name = color;
 
-  if (!productId || !color || !size || !priceInput || !imageFile) {
-    throw new Error(
-      "Preencha todos os campos obrigatórios e envie uma imagem.",
-    );
+  if (!productId || !color || !size || !priceInput) {
+    throw new Error("Preencha todos os campos obrigatórios.");
   }
 
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
-
-  if (!store) throw new Error("Loja não encontrada");
+  if (!imageFile?.size && !previousImageUrl) {
+    throw new Error(
+      "Envie uma imagem ou utilize a imagem de uma variante existente.",
+    );
+  }
 
   const parentProduct = await db.query.productTable.findFirst({
     where: eq(productTable.id, productId),
   });
 
-  if (!parentProduct || parentProduct.storeId !== store.id) {
+  if (!parentProduct || parentProduct.storeId !== storeId) {
     throw new Error("Produto inválido ou não pertence a esta loja.");
   }
 
@@ -55,19 +53,25 @@ export async function createVariantAction(formData: FormData) {
       "-",
     );
 
-  const buffer = Buffer.from(await imageFile.arrayBuffer());
-  const fileName = `${store.id}/produtos/${parentProduct.id}/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+  let imageUrl = "";
 
-  await r2.send(
-    new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: fileName,
-      Body: buffer,
-      ContentType: imageFile.type,
-    }),
-  );
+  if (imageFile && imageFile.size > 0) {
+    const buffer = Buffer.from(await imageFile.arrayBuffer());
+    const fileName = `${storeId}/produtos/${parentProduct.id}/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
 
-  const imageUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
+    await r2.send(
+      new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: fileName,
+        Body: buffer,
+        ContentType: imageFile.type,
+      }),
+    );
+
+    imageUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
+  } else if (previousImageUrl) {
+    imageUrl = previousImageUrl;
+  }
 
   await db.insert(productVariantTable).values({
     productId,
@@ -83,4 +87,4 @@ export async function createVariantAction(formData: FormData) {
   revalidatePath(`/admin/products/${productId}`);
 
   return { success: true };
-}
+});

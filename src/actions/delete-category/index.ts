@@ -2,38 +2,37 @@
 
 import { eq, and, count } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 
 import { db } from "@/db";
-import { categoryTable, storeTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { categoryTable } from "@/db/schema";
+import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ Nosso Escudo
 
-export const deleteCategory = async (categoryId: string) => {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Não autorizado");
+// Passamos <string, void> porque essa action recebe uma string (id) e não retorna nada
+export const deleteCategory = tenantOwnerAction<string, void>(
+  async (categoryId, ctx) => {
+    // 🛡️ Pegamos o ID da loja blindado
+    const { storeId } = ctx;
 
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
-  if (!store) throw new Error("Loja não encontrada");
+    // ✅ Usamos o storeId do contexto para contar
+    const categoriesCount = await db
+      .select({ value: count() })
+      .from(categoryTable)
+      .where(eq(categoryTable.storeId, storeId));
 
-  const categoriesCount = await db
-    .select({ value: count() })
-    .from(categoryTable)
-    .where(eq(categoryTable.storeId, store.id));
+    if (categoriesCount[0].value <= 1) {
+      throw new Error("Sua loja precisa ter pelo menos uma categoria ativa.");
+    }
 
-  if (categoriesCount[0].value <= 1) {
-    throw new Error("Sua loja precisa ter pelo menos uma categoria ativa.");
-  }
+    // ✅ Usamos o storeId do contexto para deletar com segurança extrema
+    await db
+      .delete(categoryTable)
+      .where(
+        and(
+          eq(categoryTable.id, categoryId),
+          eq(categoryTable.storeId, storeId),
+        ),
+      );
 
-  await db
-    .delete(categoryTable)
-    .where(
-      and(
-        eq(categoryTable.id, categoryId),
-        eq(categoryTable.storeId, store.id),
-      ),
-    );
-
-  revalidatePath("/admin/categories");
-};
+    revalidatePath("/admin/categories");
+  },
+);
