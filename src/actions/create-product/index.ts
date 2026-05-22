@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import sharp from "sharp"; // ✅ A Mágica importada aqui no topo!
 
 import { db } from "@/db";
 import { productTable, productVariantTable } from "@/db/schema";
@@ -51,16 +52,28 @@ export const createProductAction = tenantOwnerAction<
   let imageUrl = "";
 
   if (imageFile && imageFile.size > 0) {
-    const buffer = Buffer.from(await imageFile.arrayBuffer());
+    const rawBuffer = Buffer.from(await imageFile.arrayBuffer());
 
-    const fileName = `${storeId}/produtos/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+    // ✅ O Sharp entra em ação antes do upload!
+    const processedBuffer = await sharp(rawBuffer)
+      .resize({
+        width: 800,
+        height: 800,
+        fit: "cover",
+        position: "center",
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    // ✅ Extensão .webp forçada e nome limpo
+    const fileName = `${storeId}/produtos/${Date.now()}-img.webp`;
 
     await r2.send(
       new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME,
         Key: fileName,
-        Body: buffer,
-        ContentType: imageFile.type,
+        Body: processedBuffer, // ✅ Arquivo leve processado
+        ContentType: "image/webp", // ✅ Tipo de arquivo atualizado
       }),
     );
 
