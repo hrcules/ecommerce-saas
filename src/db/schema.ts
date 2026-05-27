@@ -88,6 +88,7 @@ export const storeTable = pgTable("store", {
   stripePublicKey: text("stripe_public_key"),
   stripeSecretKey: text("stripe_secret_key"),
   stripeWebhookSecret: text("stripe_webhook_secret"),
+  mpAccessToken: text("mp_access_token"),
 
   ownerId: text("owner_id")
     .notNull()
@@ -262,6 +263,10 @@ export const orderTable = pgTable("order", {
     .notNull()
     .references(() => storeTable.id, { onDelete: "cascade" }),
   stripeCheckoutSessionId: text("stripe_checkout_session_id").notNull(),
+
+  pixQrCode: text("pix_qr_code"),
+  pixQrCodeBase64: text("pix_qr_code_base64"),
+  pixPaymentId: text("pix_payment_id"),
   status: text("status").notNull(),
   orderNumber: integer("order_number").notNull().unique(),
   totalPriceInCents: integer("total_price_in_cents").notNull(),
