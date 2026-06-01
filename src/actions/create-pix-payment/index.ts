@@ -16,7 +16,6 @@ export const createPixPaymentAction = authenticatedAction<
 >(async (data, ctx) => {
   const { userId, storeId } = ctx;
 
-  // ✅ Padrão Sênior: O Zod faz o parse manual da data aqui dentro!
   const { orderId } = createPixPaymentSchema.parse(data);
 
   const order = await db.query.orderTable.findFirst({
@@ -32,7 +31,6 @@ export const createPixPaymentAction = authenticatedAction<
     where: eq(storeTable.id, storeId),
   });
 
-  // IMPORTANTE: A coluna mpAccessToken precisa existir na sua storeTable
   if (!store || !store.mpAccessToken) {
     throw new Error("Esta loja não configurou o Mercado Pago.");
   }
@@ -60,11 +58,18 @@ export const createPixPaymentAction = authenticatedAction<
   });
   const payment = new Payment(client);
 
+  const expireDate = new Date();
+  expireDate.setMinutes(expireDate.getMinutes() + 30);
+
   try {
     const result = await payment.create({
       body: {
-        transaction_amount: totalInBRL,
+        // 🚨 MODO DE TESTE ATIVADO: Forçando a cobrança de 1 centavo!
+        // IMPORTANTE: Troque "0.01" por "totalInBRL" antes de ir para produção real!
+        transaction_amount: 0.01,
+
         payment_method_id: "pix",
+        date_of_expiration: expireDate.toISOString(),
         payer: {
           email: order.shippingAddress?.email || "email@cliente.com",
         },
@@ -73,7 +78,6 @@ export const createPixPaymentAction = authenticatedAction<
       },
     });
 
-    // Salvamos o QR Code no banco
     await db
       .update(orderTable)
       .set({

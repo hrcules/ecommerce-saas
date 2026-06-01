@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm"; // ✅ 'sql' de volta para fazermos a soma!
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -6,7 +6,7 @@ import { db } from "@/db";
 import {
   orderTable,
   orderItemTable,
-  productVariantTable,
+  productVariantTable, // ✅ Tabela de variantes de volta!
   storeTable,
   user,
   notificationTable,
@@ -60,16 +60,16 @@ export const POST = async (request: Request) => {
     return new NextResponse("Erro na assinatura do webhook", { status: 400 });
   }
 
+  // ==========================================
+  // CENÁRIO 1: PAGAMENTO APROVADO! 💰
+  // ==========================================
   if (event.type === "checkout.session.completed") {
-    console.log(
-      `🟢 [WEBHOOK RECEBIDO] Checkout session completed para a loja: ${store.name}`,
-    );
+    console.log(`🟢 [WEBHOOK] Pagamento Aprovado para a loja: ${store.name}`);
 
     const session = event.data.object as Stripe.Checkout.Session;
     const orderId = session.metadata?.orderId;
 
     if (!orderId) {
-      console.log("⚠️ Pagamento recebido, mas sem orderId. Ignorando...");
       return new NextResponse("Pedido não encontrado", { status: 400 });
     }
 
@@ -78,34 +78,12 @@ export const POST = async (request: Request) => {
       .set({ status: "paid" })
       .where(eq(orderTable.id, orderId));
 
-    const orderItems = await db.query.orderItemTable.findMany({
-      where: eq(orderItemTable.orderId, orderId),
-    });
-
-    console.log("📦 Descontando estoque...");
-
-    for (const item of orderItems) {
-      try {
-        await db
-          .update(productVariantTable)
-          .set({
-            stock: sql`${productVariantTable.stock} - ${item.quantity}`,
-          })
-          .where(eq(productVariantTable.id, item.productVariantId));
-      } catch (error) {
-        console.error("❌ Erro ao descontar estoque:", error);
-      }
-    }
-
     try {
-      console.log("📧 Preparando envio de e-mails...");
-
       const order = await db.query.orderTable.findFirst({
         where: eq(orderTable.id, orderId),
         with: { shippingAddress: true },
       });
 
-      // NOVO: Buscamos os itens DE NOVO, mas agora com o nome do produto!
       const emailOrderItems = await db.query.orderItemTable.findMany({
         where: eq(orderItemTable.orderId, orderId),
         with: {
@@ -120,31 +98,23 @@ export const POST = async (request: Request) => {
           where: eq(user.id, store.ownerId),
         });
 
-        // =====================================
-        // MATEMÁTICA DO RECIBO
-        // =====================================
-        // 1. Calcula o Subtotal (Soma dos itens)
         const subtotalInCents = emailOrderItems.reduce(
           (acc, item) => acc + item.priceInCents * item.quantity,
           0,
         );
 
-        // 2. Calcula o Frete (Total - Subtotal)
         const freteInCents = order.totalPriceInCents - subtotalInCents;
 
-        // 3. Monta o Array de Produtos para a Tabela
         const formattedItems = emailOrderItems.map((item) => ({
           name: `${item.productVariant.product.name} (${item.productVariant.name})`,
           quantity: item.quantity,
           priceFormatted: formatCentsToBRL(item.priceInCents * item.quantity),
         }));
 
-        // 4. Formata os totais
         const formattedSubtotal = formatCentsToBRL(subtotalInCents);
         const formattedShipping = formatCentsToBRL(freteInCents);
         const formattedTotal = formatCentsToBRL(order.totalPriceInCents);
 
-        // Chama a função do cliente passando as informações da tabela
         await sendCustomerReceiptEmail(
           order.shippingAddress.email,
           order.shippingAddress.fullName,
@@ -157,7 +127,6 @@ export const POST = async (request: Request) => {
         );
 
         if (owner && owner.email) {
-          // Chama a função do lojista passando as informações da tabela
           await sendStoreOwnerNotificationEmail(
             owner.email,
             order.orderNumber,
@@ -171,16 +140,58 @@ export const POST = async (request: Request) => {
           await db.insert(notificationTable).values({
             userId: owner.id,
             title: "💰 Nova Venda Realizada!",
-            message: `O pedido #${order.orderNumber} no valor de ${formattedTotal} acabou de ser pago.`,
+            message: `O pedido #${order.orderNumber} no valor de ${formattedTotal} acabou de ser pago via Cartão.`,
             type: "sale",
           });
-
-          console.log("✅ E-mails enviados e notificação criada com sucesso!");
         }
       }
     } catch (emailError) {
       console.error("❌ Erro fatal no bloco de envio de e-mails:", emailError);
     }
+  }
+
+  // ==========================================
+  // CENÁRIO 2: SESSÃO EXPIRADA OU FALHOU! 🛑
+  // ==========================================
+  else if (
+    event.type === "checkout.session.expired" ||
+    event.type === "checkout.session.async_payment_failed"
+  ) {
+    console.log(`🔴 [WEBHOOK] Sessão expirada/falhou. Estornando estoque...`);
+
+    const session = event.data.object as Stripe.Checkout.Session;
+    const orderId = session.metadata?.orderId;
+
+    if (!orderId) {
+      return new NextResponse("Pedido não encontrado", { status: 400 });
+    }
+
+    // 1. Marca o pedido como cancelado
+    await db
+      .update(orderTable)
+      .set({ status: "cancelled" })
+      .where(eq(orderTable.id, orderId));
+
+    // 2. Busca os itens para saber o que devolver
+    const orderItems = await db.query.orderItemTable.findMany({
+      where: eq(orderItemTable.orderId, orderId),
+    });
+
+    // 3. O Estorno: Devolvemos as quantidades para a prateleira
+    for (const item of orderItems) {
+      try {
+        await db
+          .update(productVariantTable)
+          .set({
+            stock: sql`${productVariantTable.stock} + ${item.quantity}`, // ➕ Soma em vez de subtrair!
+          })
+          .where(eq(productVariantTable.id, item.productVariantId));
+      } catch (error) {
+        console.error("❌ Erro ao repor estoque:", error);
+      }
+    }
+
+    console.log("✅ Estoque estornado com sucesso!");
   }
 
   return NextResponse.json({ received: true });

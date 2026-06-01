@@ -46,6 +46,7 @@ export const updateStoreSettingsAction = tenantOwnerAction<
   const stripePublicKey = formData.get("stripePublicKey") as string;
   const stripeSecretKey = formData.get("stripeSecretKey") as string;
   const stripeWebhookSecret = formData.get("stripeWebhookSecret") as string;
+  const mpAccessToken = formData.get("mpAccessToken") as string;
 
   const fixedShippingFeeInCents = parseInt(
     (formData.get("fixedShippingFeeInCents") as string) || "0",
@@ -117,6 +118,7 @@ export const updateStoreSettingsAction = tenantOwnerAction<
       stripePublicKey,
       stripeSecretKey,
       stripeWebhookSecret,
+      mpAccessToken,
       updatedAt: new Date(),
     })
     .where(eq(storeTable.id, storeId)); // 🛡️ Segurança: Atualiza apenas a loja do contexto

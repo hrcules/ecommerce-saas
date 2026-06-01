@@ -1,11 +1,8 @@
-import "@/app/globals.css";
-
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/providers/react-query";
-import Footer from "@/components/common/footer";
 
 import { db } from "@/db";
 import { getTenantStore } from "@/lib/tentat";
@@ -46,7 +43,6 @@ export default function RootLayout({
         </ReactQueryProvider>
 
         <Toaster position="top-center" />
-        <Footer />
       </body>
     </html>
   );
