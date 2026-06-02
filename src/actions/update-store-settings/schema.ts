@@ -18,6 +18,8 @@ export const updateStoreSettingsSchema = z.object({
   stripePublicKey: z.string().optional().nullable(),
   stripeSecretKey: z.string().optional().nullable(),
   stripeWebhookSecret: z.string().optional().nullable(),
+
+  mpAccessToken: z.string().optional().nullable(),
 });
 
 export type UpdateStoreSettingsInput = z.infer<

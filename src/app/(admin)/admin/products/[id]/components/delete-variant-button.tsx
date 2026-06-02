@@ -24,7 +24,7 @@ export function DeleteVariantButton({
     ) {
       startTransition(async () => {
         try {
-          await deleteVariantAction(variantId, productId);
+          await deleteVariantAction({ variantId, productId });
         } catch {
           alert("Erro ao excluir a variação.");
         }

@@ -10,7 +10,8 @@ import {
   X,
   Link as LinkIcon,
   Loader2,
-  Truck, // Ícone importado para o card de frete
+  Truck,
+  QrCode, // ✅ NOVO: Ícone para o Card do PIX
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -55,6 +56,7 @@ interface SettingsFormProps {
     stripePublicKey: string | null;
     stripeSecretKey: string | null;
     stripeWebhookSecret: string | null;
+    mpAccessToken: string | null; // ✅ NOVO: Propriedade adicionada
   };
 }
 
@@ -93,6 +95,7 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
       stripePublicKey: initialData.stripePublicKey || "",
       stripeSecretKey: initialData.stripeSecretKey || "",
       stripeWebhookSecret: initialData.stripeWebhookSecret || "",
+      mpAccessToken: initialData.mpAccessToken || "", // ✅ NOVO: Valor padrão
 
       fixedShippingFee: (initialData.fixedShippingFeeInCents / 100).toString(),
       freeShippingThreshold: initialData.freeShippingThresholdInCents
@@ -115,7 +118,10 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
     if (data.stripeWebhookSecret)
       formData.append("stripeWebhookSecret", data.stripeWebhookSecret);
 
-    // Converter Reais da tela para centavos para o banco
+    // ✅ NOVO: Anexando o token do Mercado Pago
+    if (data.mpAccessToken)
+      formData.append("mpAccessToken", data.mpAccessToken);
+
     const fixedCents = Math.round(Number(data.fixedShippingFee) * 100);
     formData.append("fixedShippingFeeInCents", fixedCents.toString());
 
@@ -128,7 +134,7 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
         thresholdCents.toString(),
       );
     } else {
-      formData.append("freeShippingThresholdInCents", ""); // Envia vazio para salvar null no banco
+      formData.append("freeShippingThresholdInCents", "");
     }
 
     if (logoFile) formData.append("logoFile", logoFile);
@@ -379,16 +385,11 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <LinkIcon className="h-5 w-5" /> Configuração de Pagamentos
-              (Stripe)
+              <LinkIcon className="h-5 w-5" /> Pagamentos (Cartão via Stripe)
             </CardTitle>
             <CardDescription>
-              Conecte sua própria conta do Stripe para receber as vendas
-              diretamente.
-              <br />
-              <span className="text-xs font-bold text-amber-600">
-                ⚠️ Nunca compartilhe sua Chave Secreta com ninguém.
-              </span>
+              Conecte sua conta do Stripe para processar cartões de crédito de
+              forma segura.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -448,6 +449,43 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
                       {process.env.NEXT_PUBLIC_APP_URL}
                       /api/stripe/webhook?storeId={initialData.id}
                     </code>
+                  </p>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* ✅ NOVO: Pagamentos (Mercado Pago PIX) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-emerald-600">
+              <QrCode className="h-5 w-5" /> Pagamentos (PIX via Mercado Pago)
+            </CardTitle>
+            <CardDescription>
+              Gere QR Codes de PIX com aprovação instantânea conectando seu
+              Mercado Pago.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="mpAccessToken"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Access Token (Produção)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="APP_USR-..."
+                      {...field}
+                      value={field.value || ""}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground mt-1 text-[10px]">
+                    Gere este token no painel de desenvolvedores do Mercado Pago
+                    (Credenciais de Produção).
                   </p>
                 </FormItem>
               )}

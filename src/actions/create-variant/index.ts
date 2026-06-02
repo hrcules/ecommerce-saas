@@ -3,6 +3,8 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+// ✅ 1. Importando o Sharp
+import sharp from "sharp";
 
 import { db } from "@/db";
 import { productTable, productVariantTable } from "@/db/schema";
@@ -56,15 +58,28 @@ export const createVariantAction = tenantOwnerAction<
   let imageUrl = "";
 
   if (imageFile && imageFile.size > 0) {
-    const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const fileName = `${storeId}/produtos/${parentProduct.id}/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+    const rawBuffer = Buffer.from(await imageFile.arrayBuffer());
+
+    // ✅ 2. A Mágica do Sharp: Corta em 800x800 (quadrado) e converte para WebP
+    const processedBuffer = await sharp(rawBuffer)
+      .resize({
+        width: 800,
+        height: 800,
+        fit: "cover",
+        position: "center",
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    // ✅ 3. Salvando com a extensão .webp
+    const fileName = `${storeId}/produtos/${parentProduct.id}/${Date.now()}-img.webp`;
 
     await r2.send(
       new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME,
         Key: fileName,
-        Body: buffer,
-        ContentType: imageFile.type,
+        Body: processedBuffer,
+        ContentType: "image/webp", // ✅ Tipo de conteúdo atualizado
       }),
     );
 

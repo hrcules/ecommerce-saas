@@ -37,10 +37,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ReactQueryProvider>
-          {/* O seu conteúdo (Landing Page ou Admin) renderiza aqui */}
           <main className="flex-1">{children}</main>
 
-          {/* Mantive o seu Footer original aqui na raiz */}
           <Footer />
         </ReactQueryProvider>
 

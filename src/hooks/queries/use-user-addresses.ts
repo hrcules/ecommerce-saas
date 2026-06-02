@@ -10,7 +10,9 @@ export const useUserAddresses = (params?: {
 }) => {
   return useQuery({
     queryKey: getUserAddressesQueryKey(),
-    queryFn: getUserAddresses,
+    queryFn: async () => {
+      return await getUserAddresses(undefined);
+    },
     initialData: params?.initialData,
   });
 };

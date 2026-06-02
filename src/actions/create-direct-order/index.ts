@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm"; // 👈 Importamos o 'sql' para subtrair no banco
 
 import { db } from "@/db";
 import {
@@ -10,7 +10,7 @@ import {
   shippingAddressTable,
   storeTable,
 } from "@/db/schema";
-import { authenticatedAction } from "@/lib/safe-action"; // ✅ Escudo
+import { authenticatedAction } from "@/lib/safe-action";
 import { createDirectOrderSchema } from "./schema";
 import { calculateShipping } from "@/helpers/shipping";
 
@@ -28,10 +28,16 @@ export const createDirectOrder = authenticatedAction<
     with: { product: true },
   });
 
-  // 🛡️ Impedimos que alguém crie pedido direto de uma variante de outra loja
   if (!variant || variant.product.storeId !== storeId) {
     throw new Error(
       "Bad Request: Variante de produto não encontrada nesta loja.",
+    );
+  }
+
+  // 🛡️ NOVA TRAVA: Verifica se tem estoque suficiente antes de prosseguir!
+  if (variant.stock < quantity) {
+    throw new Error(
+      `Estoque insuficiente. Temos apenas ${variant.stock} unidades disponíveis.`,
     );
   }
 
@@ -47,7 +53,6 @@ export const createDirectOrder = authenticatedAction<
     where: eq(shippingAddressTable.id, addressId),
   });
 
-  // 🛡️ Garantimos que o comprador só pode usar um endereço que seja DELE
   if (!address || address.userId !== userId) {
     throw new Error(
       "Bad Request: Endereço inválido ou não pertence ao usuário.",
@@ -73,8 +78,8 @@ export const createDirectOrder = authenticatedAction<
       .insert(orderTable)
       .values({
         orderNumber,
-        storeId: storeId, // ✅ Usamos o ID blindado do contexto
-        userId: userId, // ✅ Usamos o ID blindado do comprador
+        storeId: storeId,
+        userId: userId,
         shippingAddressId: addressId,
         totalPriceInCents: totalInCents,
         status: "pending",
@@ -88,6 +93,15 @@ export const createDirectOrder = authenticatedAction<
       quantity,
       priceInCents: variant.priceInCents,
     });
+
+    // 📦 PASSO 1 DA ABORDAGEM 1: A RESERVA DE ESTOQUE
+    // Descontamos a quantidade exata comprada do estoque atual
+    await db
+      .update(productVariantTable)
+      .set({
+        stock: sql`${productVariantTable.stock} - ${quantity}`,
+      })
+      .where(eq(productVariantTable.id, variant.id));
 
     return { orderId: order.id };
   } catch (error) {

@@ -10,6 +10,15 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      // O Better Auth já gerou o token seguro e montou a URL!
+      // Ex: http://localhost:3000/auth/reset-password?token=xyz123
+
+      console.log(`🔗 [DEBUG] URL de Recuperação para ${user.email}:`, url);
+
+      // Aqui nós chamaremos o seu disparador de e-mail real.
+      // Ex: await sendPasswordResetEmail(user.email, url);
+    },
   },
 
   socialProviders: {
