@@ -32,7 +32,10 @@ export function KillSwitchButton({
 
     startTransition(async () => {
       try {
-        await toggleStoreStatus(storeId, isActive);
+        await toggleStoreStatus({
+          storeId,
+          currentStatus: isActive,
+        });
         if (isActive) {
           toast.error(`A loja ${storeName} foi desativada.`);
         } else {
