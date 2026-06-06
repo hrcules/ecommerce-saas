@@ -1,97 +1,114 @@
 import Link from "next/link";
-import { ShoppingBag, Zap, ShieldCheck, Globe } from "lucide-react";
+import { Zap, ShieldCheck, Globe, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
+  // Link direto para o seu WhatsApp com uma mensagem pré-definida
+  const whatsappLink =
+    "https://wa.me/5583999170411?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20como%20criar%20minha%20loja%20na%20Bewear.";
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-slate-900">
-      {/* Header Simples */}
-      <header className="flex h-16 items-center justify-between border-b px-6">
+      {/* Header Minimalista (Sem botões de login, focado na marca) */}
+      <header className="flex h-16 items-center justify-center border-b px-6">
         <div className="flex items-center gap-2">
           <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg font-bold text-white">
             B
           </div>
           <span className="text-xl font-bold tracking-tight">BEWEAR</span>
         </div>
-        <nav className="flex gap-4">
-          <Button variant="ghost" asChild>
-            <Link href="/authentication">Entrar</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/authentication">Criar minha loja</Link>
-          </Button>
-        </nav>
       </header>
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="mx-auto max-w-4xl space-y-6 px-6 py-20 text-center">
-          <h1 className="text-5xl font-extrabold tracking-tight md:text-6xl">
-            Sua loja online com{" "}
-            <span className="text-primary">subdomínio próprio</span> e checkout
-            profissional.
+        <section className="mx-auto max-w-4xl space-y-8 px-6 py-24 text-center">
+          <h1 className="text-5xl font-extrabold tracking-tight text-balance md:text-6xl">
+            Venda online com sua própria marca.{" "}
+            <span className="text-primary">Sem complicação.</span>
           </h1>
-          <p className="text-muted-foreground text-xl">
-            A Bewear é a plataforma definitiva para quem quer vender mais.
-            Configure seu Stripe, defina seu frete e comece a vender hoje mesmo.
+          <p className="text-muted-foreground mx-auto max-w-2xl text-xl text-balance md:text-2xl">
+            A plataforma premium para você gerenciar produtos, pagamentos e
+            envios. Tudo em um ambiente seguro, moderno e com a cara do seu
+            negócio.
           </p>
-          <div className="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
+          <div className="flex flex-col justify-center gap-4 pt-8 sm:flex-row">
             <Button
               size="lg"
-              className="rounded-full px-8 py-6 text-lg"
+              className="gap-2 rounded-full px-8 py-6 text-lg"
               asChild
             >
-              <Link href="/authentication">Começar Agora — É Grátis</Link>
+              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="h-5 w-5" />
+                Fale com um Especialista
+              </a>
             </Button>
           </div>
         </section>
 
-        {/* Features Básicas */}
-        <section className="bg-slate-50 px-6 py-16">
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 md:grid-cols-3">
-            <div className="space-y-3">
-              <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-lg">
-                <Globe className="h-6 w-6" />
+        {/* Features Focadas em Valor e Conversão */}
+        <section className="bg-slate-50 px-6 py-20">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 md:grid-cols-3">
+            <div className="space-y-4">
+              <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-xl">
+                <Globe className="h-7 w-7" />
               </div>
-              <h3 className="text-xl font-bold">Subdomínios Próprios</h3>
-              <p className="text-muted-foreground">
-                Sua marca em destaque com uma URL exclusiva:{" "}
-                <span className="font-medium">sualoja.bewear.com.br</span>
+              <h3 className="text-xl font-bold">Sua Marca em Destaque</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Esqueça os marketplaces que escondem o seu nome. Tenha uma
+                vitrine exclusiva com o seu link:{" "}
+                <span className="font-semibold text-slate-800">
+                  sualoja.bewearshop.com.br
+                </span>
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-lg">
-                <ShieldCheck className="h-6 w-6" />
+            <div className="space-y-4">
+              <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-xl">
+                <ShieldCheck className="h-7 w-7" />
               </div>
-              <h3 className="text-xl font-bold">Pagamentos Seguros</h3>
-              <p className="text-muted-foreground">
-                Integração nativa com Stripe. Receba suas vendas direto na sua
-                conta bancária.
+              <h3 className="text-xl font-bold">PIX e Cartão Integrados</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Checkout de alta conversão. Receba pagamentos via PIX com baixa
+                automática e baixa de estoque em tempo real.
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-lg">
-                <Zap className="h-6 w-6" />
+            <div className="space-y-4">
+              <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-xl">
+                <Zap className="h-7 w-7" />
               </div>
-              <h3 className="text-xl font-bold">Gestão Simplificada</h3>
-              <p className="text-muted-foreground">
-                Painel admin completo para gerenciar pedidos, estoque e
-                configurações de frete.
+              <h3 className="text-xl font-bold">Gestão Descomplicada</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Um painel de controle feito para humanos. Gerencie seus pedidos,
+                produtos e configurações de frete em poucos cliques.
               </p>
             </div>
           </div>
         </section>
-      </main>
 
-      {/* Footer */}
-      <footer className="text-muted-foreground border-t px-6 py-10 text-center text-sm">
-        <p>
-          &copy; {new Date().getFullYear()} Bewear SaaS. Todos os direitos
-          reservados.
-        </p>
-      </footer>
+        {/* CTA Final */}
+        <section className="px-6 py-20 text-center">
+          <div className="mx-auto max-w-3xl space-y-6">
+            <h2 className="text-3xl font-bold tracking-tight">
+              Pronto para digitalizar o seu estoque?
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Nós configuramos a estrutura, você foca em vender. Entre em
+              contato para montarmos a sua loja.
+            </p>
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-primary text-primary hover:bg-primary/5 mt-4 gap-2 rounded-full px-8 py-6 text-lg"
+              asChild
+            >
+              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                Solicitar Criação de Loja
+              </a>
+            </Button>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

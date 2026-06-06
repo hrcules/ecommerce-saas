@@ -1,3 +1,4 @@
+// @ts-expect-error: side-effect import of CSS file (handled by Next.js)
 import "./globals.css";
 
 import type { Metadata } from "next";
@@ -7,7 +8,8 @@ import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/providers/react-query";
 import Footer from "@/components/common/footer";
 
-// Font Poppins que você já configurou e gosta
+import { Analytics } from "@vercel/analytics/next";
+
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -15,7 +17,6 @@ const poppins = Poppins({
   display: "swap",
 });
 
-// Metadata agora focado na PLATAFORMA (Landing Page)
 export const metadata: Metadata = {
   title: {
     default: "BEWEAR | Sua vitrine digital em minutos",
@@ -41,6 +42,8 @@ export default function RootLayout({
 
           <Footer />
         </ReactQueryProvider>
+
+        <Analytics />
 
         <Toaster position="top-center" richColors />
       </body>
