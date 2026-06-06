@@ -26,17 +26,14 @@ export default async function proxy(req: NextRequest) {
 
   const hostname = req.headers.get("host") || "";
 
-  // 🧹 1. LIMPEZA DE URL: Remove o "www." e redireciona automaticamente
-  if (hostname.startsWith("www.")) {
+  if (hostname.startsWith("www.") && hostname !== "www.bewearshop.com.br") {
     const cleanHostname = hostname.replace("www.", "");
     const cleanUrl = new URL(req.url);
     cleanUrl.host = cleanHostname;
 
-    // Devolve o usuário para a mesma página, mas com a URL limpa!
     return NextResponse.redirect(cleanUrl);
   }
 
-  // ✅ 2. DOMÍNIO OFICIAL: Atualizado para bewearshop.com.br
   const rootDomains = [
     "localhost:3000",
     "lvh.me:3000",
