@@ -86,6 +86,85 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Como Funciona */}
+        <section className="px-6 py-20">
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-12 text-center">
+              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+                Como funciona na prática?
+              </h2>
+              <p className="text-muted-foreground mt-4 text-lg">
+                Três passos simples separam você da sua nova loja online.
+              </p>
+            </div>
+
+            <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">
+              {/* Linha conectora (visível apenas em telas grandes) */}
+              <div className="absolute top-8 right-[16%] left-[16%] hidden h-[2px] bg-slate-100 md:block"></div>
+
+              <div className="relative space-y-4 text-center">
+                <div className="bg-primary text-primary-foreground relative z-10 mx-auto flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold shadow-sm">
+                  1
+                </div>
+                <h3 className="text-xl font-bold">Alinhamento</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Você nos chama no WhatsApp e conta sobre o seu negócio.
+                  Entendemos suas necessidades e preparamos a sua estrutura.
+                </p>
+              </div>
+
+              <div className="relative space-y-4 text-center">
+                <div className="bg-primary text-primary-foreground relative z-10 mx-auto flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold shadow-sm">
+                  2
+                </div>
+                <h3 className="text-xl font-bold">Setup Mágico</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Nós configuramos o seu subdomínio exclusivo, painel de gestão
+                  e integração de pagamentos. Você não toca em código.
+                </p>
+              </div>
+
+              <div className="relative space-y-4 text-center">
+                <div className="bg-primary text-primary-foreground relative z-10 mx-auto flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold shadow-sm">
+                  3
+                </div>
+                <h3 className="text-xl font-bold">Pronto para Vender</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Você recebe seus acessos, cadastra seus produtos pelo celular
+                  ou computador e já pode divulgar o seu link.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Quem Somos */}
+        <section className="mx-4 mb-12 max-w-6xl rounded-3xl bg-slate-900 px-6 py-24 text-slate-50 md:mx-auto">
+          <div className="mx-auto max-w-3xl space-y-8 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-balance md:text-4xl">
+              Por trás da Bewear: Tecnologia focada no seu crescimento.
+            </h2>
+            <div className="space-y-6 text-lg leading-relaxed text-balance text-slate-300">
+              <p>
+                A Bewear nasceu de uma percepção simples: plataformas de
+                e-commerce tradicionais são difíceis de configurar, cobram taxas
+                abusivas e escondem a marca do lojista.
+              </p>
+              <p>
+                Nós somos desenvolvedores especialistas em software de alta
+                performance. Nosso objetivo é democratizar o acesso à tecnologia
+                de ponta, permitindo que empreendedores de qualquer tamanho
+                tenham uma loja virtual robusta, segura e elegante.
+              </p>
+              <p className="font-medium text-white">
+                Nossa missão é cuidar da infraestrutura, para que você foque
+                apenas no que realmente importa: encantar seus clientes e vender
+                mais.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Final */}
         <section className="px-6 py-20 text-center">
           <div className="mx-auto max-w-3xl space-y-6">
