@@ -1,7 +1,7 @@
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 const BREVO_API_KEY = process.env.BREVO_API_KEY || "";
 
-const SENDER_EMAIL = "dev.hrcules@gmail.com";
+const SENDER_EMAIL = "no-reply@bewearshop.com.br";
 
 // NOVO: Tipo para padronizar os itens no e-mail
 export interface EmailOrderItem {
@@ -168,6 +168,6 @@ export async function sendStoreOwnerNotificationEmail(
 
     console.log(`✅ Email de notificação enviado para o lojista ${ownerEmail}`);
   } catch (error) {
-    console.error("❌ Erro ao enviar email para o lojista:", error);
+    console.error("❌ Erro ao enviar email para o   lojista:", error);
   }
 }

@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteVariantAction } from "@/actions/delete-variant";
+import { toast } from "sonner";
 
 interface DeleteVariantButtonProps {
   variantId: string;
@@ -24,14 +25,22 @@ export function DeleteVariantButton({
     ) {
       startTransition(async () => {
         try {
-          await deleteVariantAction({ variantId, productId });
+          const result = await deleteVariantAction({ variantId, productId });
+
+          if (result?.error) {
+            toast.error(result.error);
+            return;
+          }
+
+          if (result?.success) {
+            toast.success("Variação excluída com sucesso!");
+          }
         } catch {
-          alert("Erro ao excluir a variação.");
+          toast.error("Erro inesperado ao tentar excluir a variação.");
         }
       });
     }
   };
-
   return (
     <Button
       variant="ghost"
