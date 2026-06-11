@@ -6,7 +6,7 @@ import Stripe from "stripe";
 import { db } from "@/db";
 import { orderItemTable, orderTable, storeTable } from "@/db/schema";
 import { calculateShipping } from "@/helpers/shipping";
-import { authenticatedAction } from "@/lib/safe-action"; // ✅ Escudo
+import { authenticatedAction } from "@/lib/safe-action";
 
 import {
   CreateCheckoutSessionSchema,
@@ -24,12 +24,10 @@ export const createCheckoutSession = authenticatedAction<
     where: eq(orderTable.id, orderId),
   });
 
-  // 🛡️ Segurança Nível Militar: O pedido é MEU e é DESTA loja?
   if (!order || order.userId !== userId || order.storeId !== storeId) {
     throw new Error("Pedido não encontrado ou não autorizado.");
   }
 
-  // Precisamos buscar a loja na DB para pegar a Chave Secreta do Stripe e as regras de frete
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.id, storeId),
   });
@@ -58,11 +56,18 @@ export const createCheckoutSession = authenticatedAction<
 
   const stripe = new Stripe(store.stripeSecretKey);
 
+  const isDev = process.env.NODE_ENV === "development";
+  const baseHost = isDev ? "lvh.me:3000" : "bewearshop.com.br";
+  const protocol = isDev ? "http://" : "https://";
+
+  const successUrl = `${protocol}${store.slug}.${baseHost}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = `${protocol}${store.slug}.${baseHost}/cart`;
+
   const checkoutSession = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/cancel`,
+    success_url: successUrl,
+    cancel_url: cancelUrl,
     metadata: {
       orderId,
     },
