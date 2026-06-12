@@ -1,7 +1,7 @@
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 const BREVO_API_KEY = process.env.BREVO_API_KEY || "";
 
-const SENDER_EMAIL = "no-reply@bewearshop.com.br";
+const SENDER_EMAIL = "nao-responda@bewearshop.com.br";
 
 // NOVO: Tipo para padronizar os itens no e-mail
 export interface EmailOrderItem {
