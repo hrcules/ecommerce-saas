@@ -36,14 +36,17 @@ export const auth = betterAuth({
       secure: process.env.NODE_ENV === "production",
       // ✅ AQUI ESTÁ A MÁGICA: Trocamos .localhost por .lvh.me
       domain:
-        process.env.NODE_ENV === "production" ? ".bewear.com.br" : ".lvh.me",
+        process.env.NODE_ENV === "production"
+          ? ".bewearshop.com.br"
+          : ".lvh.me",
     },
   },
   trustedOrigins: [
+    "https://bewearshop.com.br",
+    "https://*.bewearshop.com.br",
+
     "http://lvh.me:3000",
     "http://*.lvh.me:3000",
-    "http://bewear.lvh.me:3000",
-    "http://testbewear.lvh.me:3000",
   ],
 
   database: drizzleAdapter(db, {

@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm"; // ✅ 'sql' de volta para fazermos a soma!
+import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -6,7 +6,7 @@ import { db } from "@/db";
 import {
   orderTable,
   orderItemTable,
-  productVariantTable, // ✅ Tabela de variantes de volta!
+  productVariantTable,
   storeTable,
   user,
   notificationTable,
@@ -18,15 +18,26 @@ import {
 import { formatCentsToBRL } from "@/helpers/money";
 
 export const POST = async (request: Request) => {
-  const { searchParams } = new URL(request.url);
-  const storeId = searchParams.get("storeId");
+  // 1. Lemos o corpo da requisição como texto bruto (necessário para o Stripe validar depois)
+  const text = await request.text();
+
+  // 2. "Espiamos" o JSON não verificado apenas para extrair o storeId do metadata
+  let unverifiedEvent;
+  try {
+    unverifiedEvent = JSON.parse(text);
+  } catch (err) {
+    return new NextResponse("JSON Inválido", { status: 400 });
+  }
+
+  const storeId = unverifiedEvent?.data?.object?.metadata?.storeId;
 
   if (!storeId) {
-    return new NextResponse("storeId ausente na URL do Webhook", {
+    return new NextResponse("storeId ausente no metadata do evento do Stripe", {
       status: 400,
     });
   }
 
+  // 3. Agora que temos o storeId, buscamos a loja e suas chaves secretas
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.id, storeId),
   });
@@ -43,12 +54,11 @@ export const POST = async (request: Request) => {
     return new NextResponse("Assinatura ausente", { status: 400 });
   }
 
-  const text = await request.text();
-
   const stripe = new Stripe(store.stripeSecretKey);
 
   let event: Stripe.Event;
 
+  // 4. Validação Oficial: Aqui o Stripe garante que o evento não foi forjado
   try {
     event = stripe.webhooks.constructEvent(
       text,

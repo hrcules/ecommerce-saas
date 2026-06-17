@@ -70,6 +70,7 @@ export const createCheckoutSession = authenticatedAction<
     cancel_url: cancelUrl,
     metadata: {
       orderId,
+      storeId,
     },
     shipping_options: [
       {
