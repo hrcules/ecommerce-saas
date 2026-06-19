@@ -18,56 +18,86 @@ import {
 import { formatCentsToBRL } from "@/helpers/money";
 
 export const POST = async (request: Request) => {
-  // 1. Lemos o corpo da requisição como texto bruto (necessário para o Stripe validar depois)
+  // --------------------------------------------------
+  // PASSO DE DEBUG 1: VALIDAR O CORPO BRUTO (RAW BODY)
+  // --------------------------------------------------
   const text = await request.text();
+  console.log("🔍 [DEBUG WH] --- INÍCIO DO DIAGNÓSTICO ---");
+  console.log("🔍 [DEBUG WH] 1. Comprimento do texto bruto:", text?.length);
+  console.log(
+    "🔍 [DEBUG WH] 1. Primeiros 50 caracteres:",
+    text?.substring(0, 50),
+  );
 
-  // 2. "Espiamos" o JSON não verificado apenas para extrair o storeId do metadata
   let unverifiedEvent;
   try {
     unverifiedEvent = JSON.parse(text);
   } catch (err) {
+    console.error("❌ [DEBUG WH] Falha: O corpo não é um JSON válido.");
     return new NextResponse("JSON Inválido", { status: 400 });
   }
 
+  // --------------------------------------------------
+  // PASSO DE DEBUG 2: VALIDAÇÃO DOS METADADOS
+  // --------------------------------------------------
   const storeId = unverifiedEvent?.data?.object?.metadata?.storeId;
+  console.log("🔍 [DEBUG WH] 2. storeId extraído do JSON:", storeId);
 
   if (!storeId) {
-    return new NextResponse("storeId ausente no metadata do evento do Stripe", {
-      status: 400,
-    });
+    console.error("❌ [DEBUG WH] Falha: storeId ausente.");
+    return new NextResponse("storeId ausente no metadata", { status: 400 });
   }
 
-  // 3. Agora que temos o storeId, buscamos a loja e suas chaves secretas
+  // --------------------------------------------------
+  // PASSO DE DEBUG 3: CONCORDÂNCIA DO BANCO DE DADOS
+  // --------------------------------------------------
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.id, storeId),
   });
 
-  if (!store || !store.stripeSecretKey || !store.stripeWebhookSecret) {
-    return new NextResponse(
-      "Loja não encontrada ou chaves do Stripe não configuradas",
-      { status: 400 },
+  console.log("🔍 [DEBUG WH] 3. Loja encontrada no DB?", !!store);
+  if (store) {
+    console.log(
+      "🔍 [DEBUG WH] 3. Comprimento do Webhook Secret no DB:",
+      store.stripeWebhookSecret?.length,
+    );
+    console.log(
+      "🔍 [DEBUG WH] 3. Prefixo do Webhook Secret no DB:",
+      store.stripeWebhookSecret?.substring(0, 8),
     );
   }
 
-  const signature = request.headers.get("stripe-signature");
-  if (!signature) {
-    return new NextResponse("Assinatura ausente", { status: 400 });
+  if (!store || !store.stripeSecretKey || !store.stripeWebhookSecret) {
+    return new NextResponse("Chaves não configuradas", { status: 400 });
   }
 
-  const stripe = new Stripe(store.stripeSecretKey);
+  // --------------------------------------------------
+  // PASSO DE DEBUG 4: VALIDAÇÃO DO CABEÇALHO DE ASSINATURA
+  // --------------------------------------------------
+  const signature = request.headers.get("stripe-signature");
+  console.log("🔍 [DEBUG WH] 4. Cabeçalho signature presente?", !!signature);
+  console.log(
+    "🔍 [DEBUG WH] 4. Início da assinatura:",
+    signature?.substring(0, 30),
+  );
 
+  // Limpeza bruta para evitar caracteres fantasmas (aspas ou espaços do banco)
+  const cleanWebhookSecret = store.stripeWebhookSecret.replace(/['"\s]/g, "");
+  const cleanSecretKey = store.stripeSecretKey.replace(/['"\s]/g, "");
+
+  const stripe = new Stripe(cleanSecretKey);
   let event: Stripe.Event;
 
-  // 4. Validação Oficial: Aqui o Stripe garante que o evento não foi forjado
   try {
     event = stripe.webhooks.constructEvent(
       text,
-      signature,
-      store.stripeWebhookSecret,
+      signature!,
+      cleanWebhookSecret,
     );
-  } catch (error) {
-    console.error("❌ Erro na assinatura do webhook:", error);
-    return new NextResponse("Erro na assinatura do webhook", { status: 400 });
+    console.log("✅ [DEBUG WH] SUCESSO: Assinatura validada com precisão!");
+  } catch (error: any) {
+    console.error("❌ [DEBUG WH] ERRO DO CONSTRUCT_EVENT:", error.message);
+    return new NextResponse("Erro na assinatura", { status: 400 });
   }
 
   // ==========================================
