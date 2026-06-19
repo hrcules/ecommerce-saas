@@ -1,4 +1,5 @@
 import { eq, sql } from "drizzle-orm";
+import { headers } from "next/headers"; // ✅ IMPORTAÇÃO CRÍTICA DO NEXT.JS
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -17,17 +18,16 @@ import {
 } from "@/lib/email";
 import { formatCentsToBRL } from "@/helpers/money";
 
+// ✅ FORÇA A VERCEL A NÃO FAZER CACHE DESTA ROTA
+export const dynamic = "force-dynamic";
+
 export const POST = async (request: Request) => {
   // --------------------------------------------------
   // PASSO DE DEBUG 1: VALIDAR O CORPO BRUTO (RAW BODY)
   // --------------------------------------------------
   const text = await request.text();
-  console.log("🔍 [DEBUG WH] --- INÍCIO DO DIAGNÓSTICO ---");
+  console.log("🔍 [DEBUG WH] --- INÍCIO DO DIAGNÓSTICO DEFINITIVO ---");
   console.log("🔍 [DEBUG WH] 1. Comprimento do texto bruto:", text?.length);
-  console.log(
-    "🔍 [DEBUG WH] 1. Primeiros 50 caracteres:",
-    text?.substring(0, 50),
-  );
 
   let unverifiedEvent;
   try {
@@ -44,7 +44,9 @@ export const POST = async (request: Request) => {
   console.log("🔍 [DEBUG WH] 2. storeId extraído do JSON:", storeId);
 
   if (!storeId) {
-    console.error("❌ [DEBUG WH] Falha: storeId ausente.");
+    console.error(
+      "❌ [DEBUG WH] Falha: storeId ausente. Ignorando evento paralelo do Stripe.",
+    );
     return new NextResponse("storeId ausente no metadata", { status: 400 });
   }
 
@@ -72,16 +74,19 @@ export const POST = async (request: Request) => {
   }
 
   // --------------------------------------------------
-  // PASSO DE DEBUG 4: VALIDAÇÃO DO CABEÇALHO DE ASSINATURA
+  // PASSO DE DEBUG 4: VALIDAÇÃO DO CABEÇALHO DE ASSINATURA (MODO NEXT.JS)
   // --------------------------------------------------
-  const signature = request.headers.get("stripe-signature");
+  // ✅ Usando a função nativa do Next.js em vez de request.headers.get
+  const headersList = await headers();
+  const signature = headersList.get("stripe-signature");
+
   console.log("🔍 [DEBUG WH] 4. Cabeçalho signature presente?", !!signature);
   console.log(
     "🔍 [DEBUG WH] 4. Início da assinatura:",
     signature?.substring(0, 30),
   );
 
-  // Limpeza bruta para evitar caracteres fantasmas (aspas ou espaços do banco)
+  // ✅ Limpeza bruta para evitar caracteres fantasmas do banco de dados
   const cleanWebhookSecret = store.stripeWebhookSecret.replace(/['"\s]/g, "");
   const cleanSecretKey = store.stripeSecretKey.replace(/['"\s]/g, "");
 
@@ -94,10 +99,17 @@ export const POST = async (request: Request) => {
       signature!,
       cleanWebhookSecret,
     );
-    console.log("✅ [DEBUG WH] SUCESSO: Assinatura validada com precisão!");
-  } catch (error: any) {
-    console.error("❌ [DEBUG WH] ERRO DO CONSTRUCT_EVENT:", error.message);
-    return new NextResponse("Erro na assinatura", { status: 400 });
+    console.log(
+      "✅ [DEBUG WH] SUCESSO ABSOLUTO: Assinatura validada com precisão!",
+    );
+  } catch (error: unknown) {
+    console.error(
+      "❌ [DEBUG WH] ERRO DO CONSTRUCT_EVENT:",
+      (error as Error).message,
+    );
+    return new NextResponse(`Erro na assinatura: ${(error as Error).message}`, {
+      status: 400,
+    });
   }
 
   // ==========================================
