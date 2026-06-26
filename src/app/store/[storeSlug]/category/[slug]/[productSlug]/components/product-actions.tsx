@@ -3,6 +3,7 @@
 import { MinusIcon, PlusIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams, usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import AddToCartButton from "./add-to-cart-button";
@@ -22,6 +23,16 @@ interface ProductActionsProps {
 }
 
 const ProductActions = ({ variants }: ProductActionsProps) => {
+  const params = useParams();
+  const pathname = usePathname(); // Lê o que está escrito na barra do navegador
+  const storeSlug = params.storeSlug as string;
+
+  // Se a barra do navegador já mostra "/store/bewear", estamos no ambiente do QA (link bruto).
+  // Se não mostra, estamos no ambiente real (subdomínio), então a base é vazia "".
+  const basePath = pathname.startsWith(`/store/${storeSlug}`)
+    ? `/store/${storeSlug}`
+    : "";
+
   const availableSizes = Array.from(new Set(variants.map((v) => v.size)));
 
   const [selectedSize, setSelectedSize] = useState(
@@ -50,6 +61,8 @@ const ProductActions = ({ variants }: ProductActionsProps) => {
       setQuantity((prev) => prev + 1);
     }
   };
+
+  const checkoutHref = `${basePath}/cart/identification?variantId=${currentVariant?.id}&quantity=${quantity}`;
 
   return (
     <div className="space-y-6">
@@ -131,11 +144,8 @@ const ProductActions = ({ variants }: ProductActionsProps) => {
               asChild
               variant="default"
             >
-              <Link
-                href={`/cart/identification?variantId=${currentVariant.id}&quantity=${quantity}`}
-              >
-                Comprar agora
-              </Link>
+              {/* ✅ NOVO: Passando o link corrigido dinamicamente */}
+              <Link href={checkoutHref}>Comprar agora</Link>
             </Button>
           </>
         ) : (

@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+// ✅ NOVO: Importações necessárias para navegação inteligente
+import { useParams, usePathname, useRouter } from "next/navigation";
 
 import type { categoryTable, storeTable } from "@/db/schema";
 import { authClient } from "@/lib/auth-client";
@@ -49,6 +51,18 @@ interface HeaderClientProps {
 }
 
 const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
+  // ✅ NOVO: Lógica inteligente de roteamento
+  const params = useParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const storeSlug = params.storeSlug as string;
+
+  // Descobre se estamos na URL bruta do QA (/store/loja) ou no domínio real
+  const basePath =
+    storeSlug && pathname.startsWith(`/store/${storeSlug}`)
+      ? `/store/${storeSlug}`
+      : "";
+
   const getInitials = (name?: string | null) => {
     if (!name) return "??";
     const parts = name.split(" ");
@@ -59,19 +73,29 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
 
   const handleSignInWithGoogle = async () => {
     const hostname = window.location.hostname;
-    const storeSlug = hostname.split(".")[0];
+    // Pega o slug da URL se for localhost, ou usa o storeSlug dinâmico
+    const currentSlug =
+      hostname.includes("lvh.me") || hostname.includes("localhost")
+        ? hostname.split(".")[0]
+        : store.slug;
 
     const isDev = process.env.NODE_ENV === "development";
     const mainDomain = isDev
       ? "http://lvh.me:3000"
       : "https://bewearshop.com.br";
 
-    const callbackURL = `${mainDomain}/api/redirect-hub?store=${storeSlug}`;
+    const callbackURL = `${mainDomain}/api/redirect-hub?store=${currentSlug}`;
 
     await authClient.signIn.social({
       provider: "google",
       callbackURL: callbackURL,
     });
+  };
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    router.push(`${basePath}/`);
+    router.refresh();
   };
 
   const GoogleIcon = () => (
@@ -99,7 +123,7 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
     <header className="w-full bg-white">
       {/* ======================= HEADER MOBILE ======================= */}
       <div className="flex items-center justify-between p-5 md:hidden">
-        <Link href="/">
+        <Link href={`${basePath}/`}>
           {store.logoUrl ? (
             <Image
               src={store.logoUrl}
@@ -174,7 +198,7 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
                     className="w-full justify-start"
                     asChild
                   >
-                    <Link href="/">
+                    <Link href={`${basePath}/`}>
                       <House className="mr-2 h-5 w-5" />
                       Inicio
                     </Link>
@@ -184,19 +208,9 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
                     className="w-full justify-start"
                     asChild
                   >
-                    <Link href="/orders">
+                    <Link href={`${basePath}/orders`}>
                       <Truck className="mr-2 h-5 w-5" />
                       Meus Pedidos
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <Link href="/cart">
-                      <ShoppingBag className="mr-2 h-5 w-5" />
-                      Sacola
                     </Link>
                   </Button>
                 </div>
@@ -211,7 +225,7 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
                       className="w-full justify-start"
                       asChild
                     >
-                      <Link href={`/category/${category.slug}`}>
+                      <Link href={`${basePath}/category/${category.slug}`}>
                         {category.name}
                       </Link>
                     </Button>
@@ -223,10 +237,7 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
                   <Button
                     variant="ghost"
                     className="text-muted-foreground w-full cursor-pointer justify-start"
-                    onClick={async () => {
-                      await authClient.signOut();
-                      window.location.href = "/";
-                    }}
+                    onClick={handleSignOut}
                   >
                     <LogOutIcon className="mr-2 h-5 w-5" />
                     Sair da Conta
@@ -260,7 +271,10 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
                     asChild
                     className="cursor-pointer p-3 font-medium"
                   >
-                    <Link href="/orders" className="flex w-full items-center">
+                    <Link
+                      href={`${basePath}/orders`}
+                      className="flex w-full items-center"
+                    >
                       <Truck className="mr-2 h-4 w-4" />
                       Meus Pedidos
                     </Link>
@@ -270,10 +284,7 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
 
                   <DropdownMenuItem
                     className="cursor-pointer p-3 font-medium text-red-600 focus:bg-red-50 focus:text-red-600"
-                    onClick={async () => {
-                      await authClient.signOut();
-                      window.location.href = "/";
-                    }}
+                    onClick={handleSignOut}
                   >
                     <LogOutIcon className="mr-2 h-4 w-4" />
                     Sair da Conta
@@ -301,7 +312,7 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
           </div>
 
           <div className="flex flex-1 items-center justify-center">
-            <Link href="/">
+            <Link href={`${basePath}/`}>
               {store.logoUrl ? (
                 <Image
                   src={store.logoUrl}
@@ -327,7 +338,7 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
           {categories.map((category) => (
             <Link
               key={category.id}
-              href={`/category/${category.slug}`}
+              href={`${basePath}/category/${category.slug}`}
               className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
             >
               {category.name}

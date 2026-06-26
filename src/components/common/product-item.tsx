@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useParams, usePathname } from "next/navigation";
 
 import type {
   categoryTable,
@@ -19,34 +22,54 @@ interface ProductItemProps {
   className?: string;
 }
 
-const ProductItem = ({ product, textContainerClassName }: ProductItemProps) => {
+const ProductItem = ({
+  product,
+  textContainerClassName,
+  className,
+}: ProductItemProps) => {
+  const params = useParams();
+  const pathname = usePathname();
+  const storeSlug = params.storeSlug as string;
+
+  const basePath =
+    storeSlug && pathname.startsWith(`/store/${storeSlug}`)
+      ? `/store/${storeSlug}`
+      : "";
+
   const firstVariant = product.variants[0];
 
   if (!firstVariant) return null;
+
   return (
     <Link
-      href={`/category/${product.category.slug}/${firstVariant.slug}`}
-      className="flex flex-col gap-4"
+      href={`${basePath}/category/${product.category.slug}/${firstVariant.slug}`}
+      className={cn("group flex flex-col gap-3", className)}
     >
-      <Image
-        src={firstVariant.imageUrl}
-        alt={firstVariant.name}
-        sizes="100vw"
-        width={0}
-        height={0}
-        className="h-auto w-full rounded-3xl"
-      />
+      <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-[24px] md:rounded-[32px]">
+        <Image
+          src={firstVariant.imageUrl}
+          alt={firstVariant.name}
+          fill
+          sizes="(max-width: 768px) 160px, 280px"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+
       <div
         className={cn(
-          "flex max-w-[200px] flex-col gap-1",
+          "flex w-full flex-col gap-1 px-1",
           textContainerClassName,
         )}
       >
-        <p className="truncate text-sm font-medium">{product.name}</p>
-        <p className="text-muted-foreground truncate text-xs font-medium">
+        <p className="text-foreground truncate text-base font-semibold md:text-lg">
+          {product.name}
+        </p>
+
+        <p className="text-muted-foreground truncate text-sm font-medium">
           {product.description}
         </p>
-        <p className="truncate text-sm font-semibold">
+
+        <p className="text-primary mt-0.5 truncate text-lg font-extrabold md:text-xl">
           {formatCentsToBRL(firstVariant.priceInCents)}
         </p>
       </div>
