@@ -50,7 +50,16 @@ export const createPixPaymentAction = authenticatedAction<
     store.freeShippingThresholdInCents || null,
   );
 
-  const totalInCents = subtotalInCents + freteInCents;
+  let finalSubtotalInCents = subtotalInCents;
+
+  if (store.pixDiscountPercent > 0) {
+    const discountAmount = Math.round(
+      (subtotalInCents * store.pixDiscountPercent) / 100,
+    );
+    finalSubtotalInCents = subtotalInCents - discountAmount;
+  }
+
+  const totalInCents = finalSubtotalInCents + freteInCents;
   const totalInBRL = Number((totalInCents / 100).toFixed(2));
 
   const client = new MercadoPagoConfig({
@@ -72,9 +81,7 @@ export const createPixPaymentAction = authenticatedAction<
   try {
     const result = await payment.create({
       body: {
-        // 🚨 MODO DE TESTE ATIVADO: Forçando a cobrança de 1 centavo!
-        // IMPORTANTE: Troque "0.01" por "totalInBRL" antes de ir para produção real!
-        transaction_amount: 0.01,
+        transaction_amount: totalInBRL,
         payment_method_id: "pix",
         date_of_expiration: expireDate.toISOString(),
         payer: {
@@ -98,6 +105,7 @@ export const createPixPaymentAction = authenticatedAction<
         pixQrCodeBase64:
           result.point_of_interaction?.transaction_data?.qr_code_base64,
         pixPaymentId: String(result.id),
+        totalPriceInCents: totalInCents,
       })
       .where(eq(orderTable.id, orderId));
 

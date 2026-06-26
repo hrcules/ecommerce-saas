@@ -83,6 +83,8 @@ export const storeTable = pgTable("store", {
     .notNull(),
   freeShippingThresholdInCents: integer("free_shipping_threshold_in_cents"),
 
+  pixDiscountPercent: integer("pix_discount_percent").default(0).notNull(),
+
   isActive: boolean("is_active").default(true).notNull(),
 
   stripePublicKey: text("stripe_public_key"),

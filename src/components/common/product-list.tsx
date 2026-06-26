@@ -20,9 +20,12 @@ interface ProductListProps {
     variants: (typeof productVariantTable.$inferSelect)[];
     category: typeof categoryTable.$inferSelect;
   })[];
+  store?: {
+    pixDiscountPercent: number;
+  };
 }
 
-const ProductList = ({ title, products }: ProductListProps) => {
+const ProductList = ({ title, products, store }: ProductListProps) => {
   const params = useParams();
   const pathname = usePathname();
   const storeSlug = params.storeSlug as string;
@@ -93,6 +96,7 @@ const ProductList = ({ title, products }: ProductListProps) => {
           {products.map((product) => (
             <ProductItem
               product={product}
+              pixDiscountPercent={store?.pixDiscountPercent}
               key={product.id}
               className="max-w-[160px] min-w-[160px] snap-start md:max-w-[280px] md:min-w-[280px]"
               textContainerClassName="w-full"
@@ -104,7 +108,7 @@ const ProductList = ({ title, products }: ProductListProps) => {
   );
 };
 
-const ProductGrid = ({ title, products }: ProductListProps) => {
+const ProductGrid = ({ title, products, store }: ProductListProps) => {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-5 pb-10 md:px-10">
       <h3 className="text-lg font-semibold md:text-xl">{title}</h3>
@@ -114,6 +118,7 @@ const ProductGrid = ({ title, products }: ProductListProps) => {
             key={product.id}
             product={product}
             textContainerClassName="w-full max-w-none"
+            pixDiscountPercent={store?.pixDiscountPercent}
           />
         ))}
       </div>

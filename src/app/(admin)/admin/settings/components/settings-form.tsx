@@ -11,7 +11,7 @@ import {
   Link as LinkIcon,
   Loader2,
   Truck,
-  QrCode, // ✅ NOVO: Ícone para o Card do PIX
+  QrCode,
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -56,7 +56,8 @@ interface SettingsFormProps {
     stripePublicKey: string | null;
     stripeSecretKey: string | null;
     stripeWebhookSecret: string | null;
-    mpAccessToken: string | null; // ✅ NOVO: Propriedade adicionada
+    mpAccessToken: string | null;
+    pixDiscountPercent: number; // ✅ NOVO: Propriedade para o desconto do PIX
   };
 }
 
@@ -95,7 +96,9 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
       stripePublicKey: initialData.stripePublicKey || "",
       stripeSecretKey: initialData.stripeSecretKey || "",
       stripeWebhookSecret: initialData.stripeWebhookSecret || "",
-      mpAccessToken: initialData.mpAccessToken || "", // ✅ NOVO: Valor padrão
+      mpAccessToken: initialData.mpAccessToken || "",
+
+      pixDiscountPercent: initialData.pixDiscountPercent.toString(),
 
       fixedShippingFee: (initialData.fixedShippingFeeInCents / 100).toString(),
       freeShippingThreshold: initialData.freeShippingThresholdInCents
@@ -118,9 +121,12 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
     if (data.stripeWebhookSecret)
       formData.append("stripeWebhookSecret", data.stripeWebhookSecret);
 
-    // ✅ NOVO: Anexando o token do Mercado Pago
     if (data.mpAccessToken)
       formData.append("mpAccessToken", data.mpAccessToken);
+
+    // ✅ NOVO: Anexando o desconto no FormData
+    if (data.pixDiscountPercent)
+      formData.append("pixDiscountPercent", data.pixDiscountPercent);
 
     const fixedCents = Math.round(Number(data.fixedShippingFee) * 100);
     formData.append("fixedShippingFeeInCents", fixedCents.toString());
@@ -456,18 +462,18 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </CardContent>
         </Card>
 
-        {/* ✅ NOVO: Pagamentos (Mercado Pago PIX) */}
+        {/* Pagamentos (Mercado Pago PIX) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-emerald-600">
               <QrCode className="h-5 w-5" /> Pagamentos (PIX via Mercado Pago)
             </CardTitle>
             <CardDescription>
-              Gere QR Codes de PIX com aprovação instantânea conectando seu
-              Mercado Pago.
+              Gere QR Codes de PIX com aprovação instantânea e ofereça
+              descontos.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <FormField
               control={form.control}
               name="mpAccessToken"
@@ -486,6 +492,31 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
                   <p className="text-muted-foreground mt-1 text-[10px]">
                     Gere este token no painel de desenvolvedores do Mercado Pago
                     (Credenciais de Produção).
+                  </p>
+                </FormItem>
+              )}
+            />
+
+            {/* ✅ NOVO: Input de Desconto PIX */}
+            <FormField
+              control={form.control}
+              name="pixDiscountPercent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Desconto para PIX (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="Ex: 5 para 5% de desconto"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground mt-1 text-[10px]">
+                    Incentive vendas à vista oferecendo um desconto automático
+                    no checkout (Deixe 0 para nenhum).
                   </p>
                 </FormItem>
               )}

@@ -20,12 +20,14 @@ interface ProductItemProps {
 
   textContainerClassName?: string;
   className?: string;
+  pixDiscountPercent?: number; // ✅ NOVO: Recebendo a porcentagem do desconto
 }
 
 const ProductItem = ({
   product,
   textContainerClassName,
   className,
+  pixDiscountPercent = 0,
 }: ProductItemProps) => {
   const params = useParams();
   const pathname = usePathname();
@@ -40,12 +42,19 @@ const ProductItem = ({
 
   if (!firstVariant) return null;
 
+  // ✅ Matemática do desconto
+  const originalPrice = firstVariant.priceInCents;
+  const pixPrice =
+    pixDiscountPercent > 0
+      ? originalPrice - (originalPrice * pixDiscountPercent) / 100
+      : originalPrice;
+
   return (
     <Link
       href={`${basePath}/category/${product.category.slug}/${firstVariant.slug}`}
       className={cn("group flex flex-col gap-3", className)}
     >
-      <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-[24px] md:rounded-[32px]">
+      <div className="bg-muted relative mx-auto aspect-square w-[92%] overflow-hidden rounded-[20px] md:rounded-[28px]">
         <Image
           src={firstVariant.imageUrl}
           alt={firstVariant.name}
@@ -57,7 +66,7 @@ const ProductItem = ({
 
       <div
         className={cn(
-          "flex w-full flex-col gap-1 px-1",
+          "flex w-full flex-col gap-1 px-2",
           textContainerClassName,
         )}
       >
@@ -69,9 +78,21 @@ const ProductItem = ({
           {product.description}
         </p>
 
-        <p className="text-primary mt-0.5 truncate text-lg font-extrabold md:text-xl">
-          {formatCentsToBRL(firstVariant.priceInCents)}
-        </p>
+        {pixDiscountPercent > 0 ? (
+          <div className="mt-0.5 flex flex-col">
+            <span className="text-muted-foreground text-xs line-through">
+              {formatCentsToBRL(originalPrice)}
+            </span>
+            <p className="text-primary truncate text-lg font-extrabold md:text-xl">
+              {formatCentsToBRL(pixPrice)}{" "}
+              <span className="text-xs font-bold">no PIX</span>
+            </p>
+          </div>
+        ) : (
+          <p className="text-primary mt-0.5 truncate text-lg font-extrabold md:text-xl">
+            {formatCentsToBRL(originalPrice)}
+          </p>
+        )}
       </div>
     </Link>
   );

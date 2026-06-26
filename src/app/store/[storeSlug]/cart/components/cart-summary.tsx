@@ -7,6 +7,7 @@ interface CartSummaryProps {
   subtotalInCents: number;
   freteInCents: number;
   totalInCents: number;
+  pixDiscountPercent?: number; // ✅ NOVO: Recebendo a porcentagem
   products: Array<{
     id: string;
     name: string;
@@ -21,58 +22,59 @@ const CartSummary = ({
   subtotalInCents,
   freteInCents,
   totalInCents,
+  pixDiscountPercent = 0,
   products,
 }: CartSummaryProps) => {
+  const pixDiscountAmount =
+    pixDiscountPercent > 0
+      ? Math.round((subtotalInCents * pixDiscountPercent) / 100)
+      : 0;
+  const pixTotalInCents = subtotalInCents - pixDiscountAmount + freteInCents;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Seu pedido</CardTitle>
+        <CardTitle>Resumo do pedido</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex justify-between">
-          <p className="text-sm">Subtotal</p>
-          <p className="text-muted-foreground text-sm font-medium">
-            {formatCentsToBRL(subtotalInCents)}
-          </p>
-        </div>
-        <div className="flex justify-between">
-          <p className="text-sm">Frete</p>
-          <p className="text-muted-foreground text-sm font-medium">
-            {freteInCents === 0 ? (
-              <span className="font-bold text-green-600">GRÁTIS</span>
-            ) : (
-              formatCentsToBRL(freteInCents)
-            )}
-          </p>
-        </div>
-        <div className="flex justify-between">
-          <p className="text-sm">Total</p>
-          <p className="text-muted-foreground text-sm font-bold">
-            {formatCentsToBRL(totalInCents)}
-          </p>
-        </div>
-
-        <div className="py-3">
-          <Separator />
-        </div>
-
-        {products.map((product, index) => (
-          <div key={product.id}>
-            {index !== 0 && (
-              <Separator className="my-5" key={`separator-${product.id}`} />
-            )}
-
-            <CartSummaryItem
-              id={product.id}
-              name={product.name}
-              variantName={product.variantName}
-              quantity={product.quantity}
-              imageUrl={product.imageUrl}
-              priceInCents={product.priceInCents}
-              key={product.id}
-            />
+      <CardContent className="space-y-4">
+        {/* Linhas de valores simples e limpas */}
+        <div className="space-y-2 text-sm">
+          <div className="text-muted-foreground flex justify-between">
+            <p>Subtotal</p>
+            <p>{formatCentsToBRL(subtotalInCents)}</p>
           </div>
-        ))}
+          <div className="text-muted-foreground flex justify-between">
+            <p>Frete</p>
+            <p>
+              {freteInCents === 0 ? "Grátis" : formatCentsToBRL(freteInCents)}
+            </p>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Aqui está o pulo do gato: Apenas duas linhas claras */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">Total no Cartão</p>
+            <p className="text-muted-foreground text-sm">
+              {formatCentsToBRL(totalInCents)}
+            </p>
+          </div>
+
+          {pixDiscountPercent > 0 && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-emerald-600">
+                Total no PIX ({pixDiscountPercent}% desc.)
+              </p>
+              <p className="text-lg font-bold text-emerald-600">
+                {formatCentsToBRL(pixTotalInCents)}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ... (resto dos itens) */}
       </CardContent>
     </Card>
   );

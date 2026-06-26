@@ -61,8 +61,8 @@ export default async function Home() {
           />
         </section>
 
-        <ProductList products={products} title="Mais vendidos" />
-        <ProductList products={products} title="Ofertas" />
+        <ProductList products={products} title="Mais vendidos" store={store} />
+        <ProductList products={products} title="Ofertas" store={store} />
 
         <section className="mx-auto w-full max-w-7xl px-5 md:hidden">
           <CategorySelector categories={categories} />
@@ -88,7 +88,11 @@ export default async function Home() {
           />
         </section>
 
-        <ProductList products={newlyCreatedProducts} title="Novos produtos" />
+        <ProductList
+          products={newlyCreatedProducts}
+          title="Novos produtos"
+          store={store}
+        />
       </main>
     </div>
   );

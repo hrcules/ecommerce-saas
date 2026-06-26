@@ -1,13 +1,14 @@
 "use client";
 
 import { MinusIcon, PlusIcon } from "lucide-react";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import AddToCartButton from "./add-to-cart-button";
 import { formatCentsToBRL } from "@/helpers/money";
+
+import AddToCartButton from "./add-to-cart-button";
 
 interface Variant {
   id: string;
@@ -20,18 +21,21 @@ interface Variant {
 
 interface ProductActionsProps {
   variants: Variant[];
+  pixDiscountPercent?: number; // ✅ NOVO: Recebendo a porcentagem do desconto
 }
 
-const ProductActions = ({ variants }: ProductActionsProps) => {
+const ProductActions = ({
+  variants,
+  pixDiscountPercent = 0,
+}: ProductActionsProps) => {
   const params = useParams();
-  const pathname = usePathname(); // Lê o que está escrito na barra do navegador
+  const pathname = usePathname();
   const storeSlug = params.storeSlug as string;
 
-  // Se a barra do navegador já mostra "/store/bewear", estamos no ambiente do QA (link bruto).
-  // Se não mostra, estamos no ambiente real (subdomínio), então a base é vazia "".
-  const basePath = pathname.startsWith(`/store/${storeSlug}`)
-    ? `/store/${storeSlug}`
-    : "";
+  const basePath =
+    storeSlug && pathname.startsWith(`/store/${storeSlug}`)
+      ? `/store/${storeSlug}`
+      : "";
 
   const availableSizes = Array.from(new Set(variants.map((v) => v.size)));
 
@@ -44,6 +48,13 @@ const ProductActions = ({ variants }: ProductActionsProps) => {
 
   const maxStock = currentVariant?.stock || 0;
   const isOutOfStock = maxStock === 0;
+
+  // ✅ Matemática do desconto
+  const originalPrice = currentVariant?.priceInCents || 0;
+  const pixPrice =
+    pixDiscountPercent > 0
+      ? originalPrice - (originalPrice * pixDiscountPercent) / 100
+      : originalPrice;
 
   useEffect(() => {
     if (quantity > maxStock && maxStock > 0) {
@@ -66,13 +77,36 @@ const ProductActions = ({ variants }: ProductActionsProps) => {
 
   return (
     <div className="space-y-6">
+      {/* ✅ Bloco de Preço Refatorado */}
       <div>
-        <p className="text-3xl font-bold">
-          {currentVariant
-            ? formatCentsToBRL(currentVariant.priceInCents)
-            : "R$ --"}
-        </p>
+        {currentVariant ? (
+          pixDiscountPercent > 0 ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted-foreground text-lg font-medium line-through">
+                {formatCentsToBRL(originalPrice)}
+              </span>
+              <div className="flex items-center gap-3">
+                <p className="text-primary text-4xl font-extrabold">
+                  {formatCentsToBRL(pixPrice)}
+                </p>
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+                  -{pixDiscountPercent}% PIX
+                </span>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                ou {formatCentsToBRL(originalPrice)} no cartão
+              </p>
+            </div>
+          ) : (
+            <p className="text-4xl font-bold">
+              {formatCentsToBRL(originalPrice)}
+            </p>
+          )
+        ) : (
+          <p className="text-4xl font-bold">R$ --</p>
+        )}
       </div>
+
       <div className="space-y-6">
         {availableSizes.length > 0 && availableSizes[0] !== "Único" && (
           <div className="space-y-3">
@@ -144,7 +178,6 @@ const ProductActions = ({ variants }: ProductActionsProps) => {
               asChild
               variant="default"
             >
-              {/* ✅ NOVO: Passando o link corrigido dinamicamente */}
               <Link href={checkoutHref}>Comprar agora</Link>
             </Button>
           </>
