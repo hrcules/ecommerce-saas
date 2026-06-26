@@ -29,17 +29,26 @@ import { useUserAddresses } from "@/hooks/queries/use-user-addresses";
 import { formatAddress } from "../../helpers/address";
 
 const formSchema = z.object({
-  email: z.email("E-mail inválido"),
-  fullName: z.string().min(1, "Nome completo é obrigatório"),
-  cpf: z.string().min(14, "CPF inválido"),
-  phone: z.string().min(15, "Celular inválido"),
-  zipCode: z.string().min(9, "CEP inválido"),
-  address: z.string().min(1, "Endereço é obrigatório"),
-  number: z.string().min(1, "Número é obrigatório"),
+  email: z.string().email("E-mail inválido"),
+  fullName: z.string().trim().min(3, "Nome completo é obrigatório"),
+
+  cpf: z
+    .string()
+    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF incompleto ou inválido"),
+
+  phone: z
+    .string()
+    .regex(/^\(\d{2}\) \d{5}-\d{4}$/, "Celular incompleto ou inválido"),
+
+  zipCode: z.string().regex(/^\d{5}-\d{3}$/, "CEP incompleto"),
+
+  address: z.string().trim().min(1, "Endereço é obrigatório"),
+  number: z.string().trim().min(1, "Número é obrigatório"),
   complement: z.string().optional(),
-  neighborhood: z.string().min(1, "Bairro é obrigatório"),
-  city: z.string().min(1, "Cidade é obrigatória"),
-  state: z.string().min(1, "Estado é obrigatório"),
+  neighborhood: z.string().trim().min(1, "Bairro é obrigatório"),
+  city: z.string().trim().min(1, "Cidade é obrigatória"),
+
+  state: z.string().trim().length(2, "Use a sigla do Estado (ex: SP)"),
 });
 
 type FormValues = z.infer<typeof formSchema>;

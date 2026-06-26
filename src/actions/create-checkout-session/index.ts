@@ -61,7 +61,7 @@ export const createCheckoutSession = authenticatedAction<
   const protocol = isDev ? "http://" : "https://";
 
   const successUrl = `${protocol}${store.slug}.${baseHost}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${protocol}${store.slug}.${baseHost}/cart`;
+  const cancelUrl = `${protocol}${store.slug}.${baseHost}/?canceled=true`;
 
   const checkoutSession = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
