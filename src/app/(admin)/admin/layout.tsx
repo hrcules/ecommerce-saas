@@ -1,15 +1,15 @@
+import type { Metadata } from "next";
+import ReactQueryProvider from "@/providers/react-query";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { db } from "@/db";
-import { eq } from "drizzle-orm";
-import { storeTable } from "@/db/schema";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
 
-import { Metadata } from "next";
 import NotificationBell from "@/components/common/notification-bell";
+import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
 import { getTenantStore } from "@/lib/tentat";
+
+import { MobileSidebar } from "./components/mobile-sidebar";
 
 export const metadata: Metadata = {
   title: "admin",
@@ -31,72 +31,91 @@ export default async function AdminLayout({
   const store = await getTenantStore();
 
   if (!store) {
-    redirect("/"); // Loja não existe, manda pra Home (ou 404)
+    redirect("/");
   }
 
   if (store.ownerId !== session.user.id) {
     console.warn(
       `Tentativa de invasão bloqueada! User: ${session.user.id} tentou acessar a loja: ${store.id}`,
     );
-
-    // Expulsa o usuário intruso de volta para a vitrine pública da loja
     redirect("/");
   }
 
+  const colorPrimary = store.colorPrimary || "#8B5CF6";
+
   return (
-    <div
-      className="flex min-h-screen"
-      style={
-        { "--primary": store.colorPrimary || "#8B5CF6" } as React.CSSProperties
-      }
-    >
-      <aside className="bg-muted/20 hidden w-64 border-r p-6 md:block">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="text-primary text-xl font-bold">
-            {store.name} Admin
+    <ReactQueryProvider>
+      <div
+        className="flex min-h-screen flex-col md:flex-row"
+        style={
+          {
+            "--primary": colorPrimary,
+            "--ring": colorPrimary,
+          } as React.CSSProperties
+        }
+      >
+        {/* === HEADER MOBILE (Visível apenas em telas pequenas) === */}
+        <header className="flex h-16 items-center justify-between border-b px-4 md:hidden">
+          <div className="flex items-center gap-2">
+            <MobileSidebar storeName={store.name} colorPrimary={colorPrimary} />
           </div>
           <NotificationBell />
-        </div>
-        <nav className="space-y-2">
-          <Button
-            variant="ghost"
-            className="text-muted-foreground hover:text-primary w-full justify-start"
-            asChild
-          >
-            <Link href="/admin/">Dashboard</Link>
-          </Button>
-          <Button
-            variant="ghost"
-            className="text-muted-foreground hover:text-primary w-full justify-start"
-            asChild
-          >
-            <Link href="/admin/products">Produtos</Link>
-          </Button>
-          <Button
-            variant="ghost"
-            className="text-muted-foreground hover:text-primary w-full justify-start"
-            asChild
-          >
-            <Link href="/admin/categories">Categorias</Link>
-          </Button>
-          <Button
-            variant="ghost"
-            className="text-muted-foreground hover:text-primary w-full justify-start"
-            asChild
-          >
-            <Link href="/admin/orders">Pedidos</Link>
-          </Button>
-          <Button
-            variant="ghost"
-            className="text-muted-foreground hover:text-primary w-full justify-start"
-            asChild
-          >
-            <Link href="/admin/settings">Configurações</Link>
-          </Button>
-        </nav>
-      </aside>
+        </header>
 
-      <main className="flex-1 p-8">{children}</main>
-    </div>
+        {/* === SIDEBAR DESKTOP (Visível apenas em md ou maior) === */}
+        <aside className="bg-muted/20 hidden w-64 shrink-0 flex-col border-r p-6 md:flex">
+          <div className="mb-8 flex items-center justify-between">
+            <div className="text-primary text-xl font-bold">
+              <p className="text-accent-foreground text-sm font-semibold">
+                área restrita
+              </p>
+              {store.name}
+            </div>
+            <NotificationBell />
+          </div>
+          <nav className="space-y-2">
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-primary w-full justify-start"
+              asChild
+            >
+              <Link href="/admin/">Dashboard</Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-primary w-full justify-start"
+              asChild
+            >
+              <Link href="/admin/products">Produtos</Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-primary w-full justify-start"
+              asChild
+            >
+              <Link href="/admin/categories">Categorias</Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-primary w-full justify-start"
+              asChild
+            >
+              <Link href="/admin/orders">Pedidos</Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-primary w-full justify-start"
+              asChild
+            >
+              <Link href="/admin/settings">Configurações</Link>
+            </Button>
+          </nav>
+        </aside>
+
+        {/* === CONTEÚDO PRINCIPAL === */}
+        {/* Ajustei o padding no mobile para não ficar tão esmagado */}
+        <main className="flex-1 p-4 md:p-8">{children}</main>
+      </div>
+    </ReactQueryProvider>
   );
 }
