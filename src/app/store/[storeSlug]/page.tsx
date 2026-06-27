@@ -7,6 +7,7 @@ import { ProductList } from "@/components/common/product-list";
 import { db } from "@/db";
 import { categoryTable, productTable } from "@/db/schema";
 import { getTenantStore } from "@/lib/tentat";
+import { BannerRenderer } from "@/components/common/banner-renderer";
 
 export default async function Home() {
   const store = await getTenantStore();
@@ -40,26 +41,32 @@ export default async function Home() {
 
       <main className="flex-1 space-y-8 pb-12">
         {/* === BANNER PRINCIPAL (CARROSSEL 1) === */}
-        <section className="mx-auto mt-6 w-full max-w-7xl px-5 md:px-10">
-          <Image
-            src={store.banner1MobileUrl || "/banner-1.png"}
-            alt={`Banner Mobile ${store.name}`}
-            height={0}
-            width={0}
-            sizes="100vw"
-            className="h-auto w-full rounded-[24px] md:hidden"
-            priority
-          />
-          <Image
-            src={store.banner1DesktopUrl || "/banner_desktop-1.png"}
-            alt={`Banner Desktop ${store.name}`}
-            height={0}
-            width={0}
-            sizes="100vw"
-            className="hidden h-auto w-full rounded-[32px] md:block"
-            priority
-          />
-        </section>
+        {(store.banner1MobileUrl || store.banner1DesktopUrl) && (
+          <section className="mx-auto mt-6 w-full max-w-7xl px-5 md:px-10">
+            {store.banner1MobileUrl && (
+              <Image
+                src={store.banner1MobileUrl}
+                alt={`Banner Mobile ${store.name}`}
+                height={0}
+                width={0}
+                sizes="100vw"
+                className="h-auto w-full rounded-[24px] md:hidden"
+                priority
+              />
+            )}
+            {store.banner1DesktopUrl && (
+              <Image
+                src={store.banner1DesktopUrl}
+                alt={`Banner Desktop ${store.name}`}
+                height={0}
+                width={0}
+                sizes="100vw"
+                className="hidden h-auto w-full rounded-[32px] md:block"
+                priority
+              />
+            )}
+          </section>
+        )}
 
         <ProductList products={products} title="Mais vendidos" store={store} />
         <ProductList products={products} title="Ofertas" store={store} />
@@ -69,24 +76,32 @@ export default async function Home() {
         </section>
 
         {/* === BANNER SECUNDÁRIO (CARROSSEL 2) === */}
-        <section className="mx-auto w-full max-w-7xl px-5 md:px-10">
-          <Image
-            src={store.banner2MobileUrl || "/banner-2.png"}
-            alt={`Banner Secundário Mobile ${store.name}`}
-            height={0}
-            width={0}
-            sizes="100vw"
-            className="h-auto w-full rounded-[24px] md:hidden"
-          />
-          <Image
-            src={store.banner2DesktopUrl || "/banner_desktop-1.png"}
-            alt={`Banner Secundário Desktop ${store.name}`}
-            height={0}
-            width={0}
-            sizes="100vw"
-            className="hidden h-auto w-full rounded-[32px] md:block"
-          />
-        </section>
+        {(store.banner2MobileUrl || store.banner2DesktopUrl) && (
+          <section className="mx-auto mt-6 w-full max-w-7xl px-5 md:px-10">
+            {store.banner2MobileUrl && (
+              <Image
+                src={store.banner2MobileUrl}
+                alt={`Banner Mobile ${store.name}`}
+                height={0}
+                width={0}
+                sizes="100vw"
+                className="h-auto w-full rounded-[24px] md:hidden"
+                priority
+              />
+            )}
+            {store.banner2DesktopUrl && (
+              <Image
+                src={store.banner2DesktopUrl}
+                alt={`Banner Desktop ${store.name}`}
+                height={0}
+                width={0}
+                sizes="100vw"
+                className="hidden h-auto w-full rounded-[32px] md:block"
+                priority
+              />
+            )}
+          </section>
+        )}
 
         <ProductList
           products={newlyCreatedProducts}

@@ -29,11 +29,13 @@ interface EditProductDialogProps {
     categoryId: string;
   };
   categories: Category[];
+  colorPrimary?: string;
 }
 
 export function EditProductDialog({
   product,
   categories,
+  colorPrimary = "#8B5CF6",
 }: EditProductDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -63,7 +65,15 @@ export function EditProductDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        className="sm:max-w-[500px]"
+        style={
+          {
+            "--primary": colorPrimary,
+            "--ring": colorPrimary,
+          } as React.CSSProperties
+        }
+      >
         <DialogHeader>
           <DialogTitle>Editar Produto</DialogTitle>
         </DialogHeader>

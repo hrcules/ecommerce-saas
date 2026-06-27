@@ -28,12 +28,14 @@ interface EditVariantDialogProps {
     stock: number;
     imageUrl: string;
   };
+  colorPrimary?: string;
 }
 
 export function EditVariantDialog({
   productId,
   existingColors,
   variant,
+  colorPrimary = "#8B5CF6",
 }: EditVariantDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -80,7 +82,15 @@ export function EditVariantDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[500px] md:min-w-[600px]">
+      <DialogContent
+        className="sm:max-w-[500px] md:min-w-[600px]"
+        style={
+          {
+            "--primary": colorPrimary,
+            "--ring": colorPrimary,
+          } as React.CSSProperties
+        }
+      >
         <DialogHeader>
           <DialogTitle>Editar Variação</DialogTitle>
         </DialogHeader>

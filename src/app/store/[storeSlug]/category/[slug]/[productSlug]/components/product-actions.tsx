@@ -77,7 +77,6 @@ const ProductActions = ({
 
   return (
     <div className="space-y-6">
-      {/* ✅ Bloco de Preço Refatorado */}
       <div>
         {currentVariant ? (
           pixDiscountPercent > 0 ? (

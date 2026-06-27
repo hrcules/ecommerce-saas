@@ -4,7 +4,6 @@ import { Poppins } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/providers/react-query";
 
-import { db } from "@/db";
 import { getTenantStore } from "@/lib/tentat";
 
 const poppins = Poppins({
@@ -28,15 +27,22 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const store = await getTenantStore();
+
   return (
     <html lang="en">
       <body
         className={`${poppins.variable} flex min-h-screen flex-col antialiased`}
+        style={
+          {
+            "--primary-color": store?.colorPrimary || undefined,
+          } as React.CSSProperties
+        }
       >
         <ReactQueryProvider>
           <main className="flex-1">{children}</main>

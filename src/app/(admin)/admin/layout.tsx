@@ -44,44 +44,51 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div
+      className="flex min-h-screen"
+      style={
+        { "--primary": store.colorPrimary || "#8B5CF6" } as React.CSSProperties
+      }
+    >
       <aside className="bg-muted/20 hidden w-64 border-r p-6 md:block">
         <div className="mb-8 flex items-center justify-between">
-          <div className="text-xl font-bold">{store.name} Admin</div>
+          <div className="text-primary text-xl font-bold">
+            {store.name} Admin
+          </div>
           <NotificationBell />
         </div>
         <nav className="space-y-2">
           <Button
             variant="ghost"
-            className="text-muted-foreground w-full justify-start"
+            className="text-muted-foreground hover:text-primary w-full justify-start"
             asChild
           >
             <Link href="/admin/">Dashboard</Link>
           </Button>
           <Button
             variant="ghost"
-            className="text-muted-foreground w-full justify-start"
+            className="text-muted-foreground hover:text-primary w-full justify-start"
             asChild
           >
             <Link href="/admin/products">Produtos</Link>
           </Button>
           <Button
             variant="ghost"
-            className="text-muted-foreground w-full justify-start"
+            className="text-muted-foreground hover:text-primary w-full justify-start"
             asChild
           >
             <Link href="/admin/categories">Categorias</Link>
           </Button>
           <Button
             variant="ghost"
-            className="text-muted-foreground w-full justify-start"
+            className="text-muted-foreground hover:text-primary w-full justify-start"
             asChild
           >
             <Link href="/admin/orders">Pedidos</Link>
           </Button>
           <Button
             variant="ghost"
-            className="text-muted-foreground w-full justify-start"
+            className="text-muted-foreground hover:text-primary w-full justify-start"
             asChild
           >
             <Link href="/admin/settings">Configurações</Link>

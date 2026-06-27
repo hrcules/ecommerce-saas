@@ -16,9 +16,13 @@ interface CategoriesClientProps {
     name: string;
     slug: string;
   }[];
+  colorPrimary: string;
 }
 
-export const CategoriesClient = ({ categories }: CategoriesClientProps) => {
+export const CategoriesClient = ({
+  categories,
+  colorPrimary,
+}: CategoriesClientProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{
     id: string;
@@ -128,6 +132,7 @@ export const CategoriesClient = ({ categories }: CategoriesClientProps) => {
         isOpen={isOpen}
         onOpenChange={setIsOpen}
         category={selectedCategory}
+        colorPrimary={colorPrimary}
       />
     </div>
   );
