@@ -51,13 +51,11 @@ interface HeaderClientProps {
 }
 
 const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
-  // ✅ NOVO: Lógica inteligente de roteamento
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
   const storeSlug = params.storeSlug as string;
 
-  // Descobre se estamos na URL bruta do QA (/store/loja) ou no domínio real
   const basePath =
     storeSlug && pathname.startsWith(`/store/${storeSlug}`)
       ? `/store/${storeSlug}`
@@ -222,7 +220,7 @@ const HeaderClient = ({ categories, store, session }: HeaderClientProps) => {
                     <Button
                       key={category.id}
                       variant="ghost"
-                      className="w-full justify-start"
+                      className="text-muted-foreground hover:text-primary hover:bg-primary/10 w-full justify-start transition-colors"
                       asChild
                     >
                       <Link href={`${basePath}/category/${category.slug}`}>
