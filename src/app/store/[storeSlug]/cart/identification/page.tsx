@@ -129,6 +129,7 @@ const IdentificationPage = async ({
               freteInCents={freteInCents}
               totalInCents={totalInCents}
               products={products}
+              pixDiscountPercent={store?.pixDiscountPercent || 0}
             />
           </div>
         </div>

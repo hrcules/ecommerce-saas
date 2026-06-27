@@ -17,5 +17,10 @@ export default async function CategoriesPage() {
     orderBy: (category, { desc }) => desc(category.createdAt),
   });
 
-  return <CategoriesClient categories={categories} />;
+  return (
+    <CategoriesClient
+      categories={categories}
+      colorPrimary={store!.colorPrimary}
+    />
+  );
 }

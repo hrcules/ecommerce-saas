@@ -50,7 +50,16 @@ export const createPixPaymentAction = authenticatedAction<
     store.freeShippingThresholdInCents || null,
   );
 
-  const totalInCents = subtotalInCents + freteInCents;
+  let finalSubtotalInCents = subtotalInCents;
+
+  if (store.pixDiscountPercent > 0) {
+    const discountAmount = Math.round(
+      (subtotalInCents * store.pixDiscountPercent) / 100,
+    );
+    finalSubtotalInCents = subtotalInCents - discountAmount;
+  }
+
+  const totalInCents = finalSubtotalInCents + freteInCents;
   const totalInBRL = Number((totalInCents / 100).toFixed(2));
 
   const client = new MercadoPagoConfig({
@@ -61,17 +70,28 @@ export const createPixPaymentAction = authenticatedAction<
   const expireDate = new Date();
   expireDate.setMinutes(expireDate.getMinutes() + 30);
 
+  const fullName = order.shippingAddress?.fullName || "Cliente Bewear";
+  const names = fullName.split(" ");
+  const firstName = names[0];
+  const lastName = names.slice(1).join(" ") || "Desconhecido";
+
+  const rawCpf = order.shippingAddress?.cpf || "";
+  const cleanCpf = rawCpf.replace(/\D/g, "") || "00000000000";
+
   try {
     const result = await payment.create({
       body: {
-        // 🚨 MODO DE TESTE ATIVADO: Forçando a cobrança de 1 centavo!
-        // IMPORTANTE: Troque "0.01" por "totalInBRL" antes de ir para produção real!
-        transaction_amount: 0.01,
-
+        transaction_amount: totalInBRL,
         payment_method_id: "pix",
         date_of_expiration: expireDate.toISOString(),
         payer: {
           email: order.shippingAddress?.email || "email@cliente.com",
+          first_name: firstName,
+          last_name: lastName,
+          identification: {
+            type: "CPF",
+            number: cleanCpf,
+          },
         },
         external_reference: orderId,
         description: `Compra na loja ${store.name} - Pedido #${order.orderNumber}`,
@@ -85,12 +105,17 @@ export const createPixPaymentAction = authenticatedAction<
         pixQrCodeBase64:
           result.point_of_interaction?.transaction_data?.qr_code_base64,
         pixPaymentId: String(result.id),
+        totalPriceInCents: totalInCents,
       })
       .where(eq(orderTable.id, orderId));
 
     return { success: true };
-  } catch (error) {
-    console.error("Erro MP:", error);
-    throw new Error("Falha ao se comunicar com o Mercado Pago.");
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("❌ Erro MP Detalhado:", error.message, error.cause);
+    } else {
+      console.error("❌ Erro MP Desconhecido:", error);
+    }
+    throw new Error("Falha ao gerar o PIX. Verifique os dados do cliente.");
   }
 });

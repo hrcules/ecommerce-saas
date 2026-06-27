@@ -49,7 +49,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     <>
       <Header />
       <div className="py-8">
-        <ProductGrid products={category.products} title={category.name} />
+        <ProductGrid
+          products={category.products}
+          title={category.name}
+          store={store}
+        />
       </div>
     </>
   );

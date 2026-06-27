@@ -32,12 +32,14 @@ interface CategoryDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   category?: { id: string; name: string; slug: string } | null;
+  colorPrimary?: string;
 }
 
 export const CategoryDialog = ({
   isOpen,
   onOpenChange,
   category,
+  colorPrimary = "#8B5CF6",
 }: CategoryDialogProps) => {
   const [isPending, setIsPending] = useState(false);
 
@@ -60,7 +62,7 @@ export const CategoryDialog = ({
       await upsertCategory(data);
       toast.success(category ? "Categoria atualizada!" : "Categoria criada!");
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error("Erro ao salvar categoria.");
     } finally {
       setIsPending(false);
@@ -69,7 +71,14 @@ export const CategoryDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        style={
+          {
+            "--primary": colorPrimary,
+            "--ring": colorPrimary,
+          } as React.CSSProperties
+        }
+      >
         <DialogHeader>
           <DialogTitle>
             {category ? "Editar Categoria" : "Nova Categoria"}

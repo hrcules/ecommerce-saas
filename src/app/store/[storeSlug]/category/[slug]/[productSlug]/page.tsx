@@ -97,6 +97,7 @@ const ProductPage = async ({ params }: ProductPageProps) => {
                 variants={productVariant.product.variants.filter(
                   (v) => v.color === productVariant.color,
                 )}
+                pixDiscountPercent={store.pixDiscountPercent}
               />
 
               <div className="mt-2 flex flex-col">

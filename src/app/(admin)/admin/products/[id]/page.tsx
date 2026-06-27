@@ -115,6 +115,7 @@ export default async function EditProductPage({
                   categoryId: product.categoryId,
                 }}
                 categories={categories}
+                colorPrimary={store.colorPrimary}
               />
             </CardContent>
           </Card>
@@ -199,6 +200,7 @@ export default async function EditProductPage({
                             productId={product.id}
                             existingColors={existingColors}
                             variant={variant}
+                            colorPrimary={store.colorPrimary}
                           />
                           <DeleteVariantButton
                             variantId={variant.id}
