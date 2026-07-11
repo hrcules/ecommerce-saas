@@ -19,10 +19,14 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: {
     default: "BEWEAR | Sua vitrine digital em minutos",
-    template: "BEWEAR | %s",
+    template: "%s | BEWEAR",
   },
   description:
     "A plataforma completa para lojistas criarem seu e-commerce com subdomínio próprio.",
+
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
