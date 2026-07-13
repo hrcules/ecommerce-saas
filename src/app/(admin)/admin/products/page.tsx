@@ -11,6 +11,7 @@ import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCentsToBRL } from "@/helpers/money";
+import { getTenantStore } from "@/lib/tentat";
 
 export default async function AdminProductsPage() {
   const session = await auth.api.getSession({
@@ -21,11 +22,9 @@ export default async function AdminProductsPage() {
     redirect("/authentication");
   }
 
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
+  const store = await getTenantStore();
 
-  if (!store) {
+  if (!store || store.ownerId !== session.user.id) {
     redirect("/");
   }
 

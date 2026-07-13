@@ -33,6 +33,12 @@ const IdentificationPage = async ({
     redirect("/");
   }
 
+  const store = await getTenantStore();
+
+  if (!store) {
+    redirect("/");
+  }
+
   const shippingAddresses = await db.query.shippingAddressTable.findMany({
     where: eq(shippingAddressTable.userId, session.user.id),
   });
@@ -48,6 +54,10 @@ const IdentificationPage = async ({
     });
 
     if (!variant) {
+      console.log(
+        `🔴 [DEBUG REDIRECT 2] Redirecionado: Fluxo 'Compre Agora'. Variante não encontrada no banco.`,
+      );
+      console.log(`-> variantId buscado: ${variantId}`);
       redirect("/");
     }
 
@@ -64,7 +74,8 @@ const IdentificationPage = async ({
     subtotalInCents = variant.priceInCents * Number(quantity);
   } else {
     const cart = await db.query.cartTable.findFirst({
-      where: (cart, { eq }) => eq(cart.userId, session.user.id),
+      where: (cart, { eq, and }) =>
+        and(eq(cart.userId, session.user.id), eq(cart.storeId, store.id)),
       with: {
         shippingAddress: true,
         items: {
@@ -97,8 +108,6 @@ const IdentificationPage = async ({
     );
     defaultAddressId = cart.shippingAddress?.id || null;
   }
-
-  const store = await getTenantStore();
 
   const freteInCents = calculateShipping(
     subtotalInCents,

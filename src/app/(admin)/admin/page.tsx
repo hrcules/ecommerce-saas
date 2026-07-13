@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import DashboardFilter from "./components/dashboard-filter";
+import { getTenantStore } from "@/lib/tentat";
 
 interface AdminDashboardPageProps {
   searchParams: Promise<{
@@ -46,11 +47,9 @@ export default async function AdminDashboardPage({
     redirect("/authentication");
   }
 
-  const store = await db.query.storeTable.findFirst({
-    where: eq(storeTable.ownerId, session.user.id),
-  });
+  const store = await getTenantStore();
 
-  if (!store) {
+  if (!store || store.ownerId !== session.user.id) {
     redirect("/");
   }
 

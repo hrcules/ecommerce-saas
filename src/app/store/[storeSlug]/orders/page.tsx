@@ -4,10 +4,10 @@ import { redirect } from "next/navigation";
 
 import Header from "@/components/common/header/index";
 import { db } from "@/db";
-import { orderTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 import Orders from "./components/orders";
+import { getTenantStore } from "@/lib/tentat";
 
 const MyOrdersPage = async () => {
   const session = await auth.api.getSession({
@@ -18,9 +18,16 @@ const MyOrdersPage = async () => {
     redirect("/login");
   }
 
+  const store = await getTenantStore();
+
+  if (!store) {
+    redirect("/");
+  }
+
   const orders = await db.query.orderTable.findMany({
-    where: eq(orderTable.userId, session?.user.id),
-    orderBy: (orderTable, { desc }) => desc(orderTable.createdAt),
+    where: (order, { eq, and }) =>
+      and(eq(order.userId, session.user.id), eq(order.storeId, store.id)),
+    orderBy: (order, { desc }) => desc(order.createdAt),
     with: {
       items: {
         with: {

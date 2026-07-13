@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import MercadoPagoConfig, { Payment } from "mercadopago";
 
@@ -16,6 +16,8 @@ import {
   sendStoreOwnerNotificationEmail,
 } from "@/lib/email";
 import { formatCentsToBRL } from "@/helpers/money";
+
+export const dynamic = "force-dynamic";
 
 export const POST = async (request: Request) => {
   try {
@@ -39,19 +41,15 @@ export const POST = async (request: Request) => {
       );
     }
 
-    // 1. Lemos o corpo da requisição que o MP enviou
     const body = await request.json();
-
-    // O MP pode enviar o ID em locais diferentes dependendo do tipo de notificação (IPN ou Webhook)
     const paymentId = body?.data?.id || body?.id;
 
     if (!paymentId) {
-      return new NextResponse("ID de pagamento não encontrado no payload", {
+      return new NextResponse("ID de pagamento não encontrado", {
         status: 400,
       });
     }
 
-    // 2. Inicializamos o SDK do MP para buscar os dados reais e seguros
     const client = new MercadoPagoConfig({ accessToken: store.mpAccessToken });
     const payment = new Payment(client);
 
@@ -60,7 +58,7 @@ export const POST = async (request: Request) => {
 
     if (!orderId) {
       console.log(
-        "⚠️ Pagamento recebido, mas sem external_reference (orderId). Ignorando...",
+        "⚠️ [Webhook MP] Pagamento sem external_reference. Ignorando...",
       );
       return new NextResponse("Pedido não encontrado", { status: 400 });
     }
@@ -69,33 +67,45 @@ export const POST = async (request: Request) => {
     // CENÁRIO 1: PIX PAGO COM SUCESSO! 🟢
     // ==========================================
     if (mpPayment.status === "approved") {
-      console.log(
-        `🟢 [WEBHOOK MP] Pagamento Aprovado para a loja: ${store.name}`,
-      );
+      const order = await db.query.orderTable.findFirst({
+        where: and(
+          eq(orderTable.id, orderId),
+          eq(orderTable.storeId, store.id), // 🛡️ Trava Multi-tenant de leitura
+        ),
+        with: { shippingAddress: true },
+      });
 
-      // Atualiza o banco
+      if (!order) {
+        return new NextResponse("Pedido não pertence a esta loja", {
+          status: 403,
+        });
+      }
+
+      if (order.status === "paid") {
+        return NextResponse.json({ received: true });
+      }
+
       await db
         .update(orderTable)
         .set({ status: "paid", updatedAt: new Date() })
-        .where(eq(orderTable.id, orderId));
+        .where(
+          and(
+            eq(orderTable.id, orderId),
+            eq(orderTable.storeId, store.id), // 🛡️ Trava Multi-tenant de escrita
+          ),
+        );
+
+      console.log(
+        `🟢 [Webhook MP] Pagamento Aprovado! Loja: ${store.name} | Pedido: #${order.orderNumber}`,
+      );
 
       try {
-        const order = await db.query.orderTable.findFirst({
-          where: eq(orderTable.id, orderId),
-          with: { shippingAddress: true },
-        });
-
-        // Se já estiver pago antes (pelo short-polling do frontend), evitamos mandar e-mail duplicado
-        if (order?.status === "paid") {
-          return NextResponse.json({ received: true });
-        }
-
         const emailOrderItems = await db.query.orderItemTable.findMany({
           where: eq(orderItemTable.orderId, orderId),
           with: { productVariant: { with: { product: true } } },
         });
 
-        if (order && order.shippingAddress) {
+        if (order.shippingAddress) {
           const owner = await db.query.user.findFirst({
             where: eq(user.id, store.ownerId),
           });
@@ -147,7 +157,7 @@ export const POST = async (request: Request) => {
           }
         }
       } catch (error) {
-        console.error("❌ Erro no envio de e-mails do MP:", error);
+        console.error("❌ [Webhook MP] Erro no envio de e-mails:", error);
       }
     }
 
@@ -158,26 +168,38 @@ export const POST = async (request: Request) => {
       mpPayment.status === "cancelled" ||
       mpPayment.status === "rejected"
     ) {
-      console.log(
-        `🔴 [WEBHOOK MP] PIX Expirado/Cancelado. Estornando estoque...`,
-      );
-
       const order = await db.query.orderTable.findFirst({
-        where: eq(orderTable.id, orderId),
+        where: and(
+          eq(orderTable.id, orderId),
+          eq(orderTable.storeId, store.id), // 🛡️ Trava Multi-tenant
+        ),
       });
 
-      // Só estorna se o pedido ainda estiver pendente (evita estorno de algo já processado errado)
-      if (order && order.status === "pending") {
+      if (!order) {
+        return new NextResponse("Pedido não pertence a esta loja", {
+          status: 403,
+        });
+      }
+
+      if (order.status === "pending") {
+        console.log(
+          `🔴 [Webhook MP] PIX Cancelado. Pedido: #${order.orderNumber}. Estornando estoque...`,
+        );
+
         await db
           .update(orderTable)
           .set({ status: "cancelled", updatedAt: new Date() })
-          .where(eq(orderTable.id, orderId));
+          .where(
+            and(
+              eq(orderTable.id, orderId),
+              eq(orderTable.storeId, store.id), // 🛡️ Trava Multi-tenant
+            ),
+          );
 
         const orderItems = await db.query.orderItemTable.findMany({
           where: eq(orderItemTable.orderId, orderId),
         });
 
-        // O Estorno: Devolvemos as quantidades para a prateleira
         for (const item of orderItems) {
           try {
             await db
@@ -187,17 +209,19 @@ export const POST = async (request: Request) => {
               })
               .where(eq(productVariantTable.id, item.productVariantId));
           } catch (error) {
-            console.error("❌ Erro ao repor estoque (MP):", error);
+            console.error(
+              `❌ [Webhook MP] Erro ao repor estoque do item ${item.productVariantId}:`,
+              error,
+            );
           }
         }
-        console.log("✅ Estoque do PIX estornado com sucesso!");
+        console.log("✅ [Webhook MP] Estoque do PIX estornado com sucesso!");
       }
     }
 
-    // Sempre retornamos 200 OK para o Mercado Pago parar de enviar a notificação
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("❌ Erro geral no webhook do MP:", error);
+    console.error("❌ [Webhook MP] Erro geral:", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 };
