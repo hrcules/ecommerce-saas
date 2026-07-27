@@ -10,9 +10,18 @@ import {
   orderTable,
   productVariantTable,
   storeTable,
+  user, // ✅ Importado para buscar o lojista
+  notificationTable, // ✅ Importado para notificação interna
 } from "@/db/schema";
 import { calculateShipping } from "@/helpers/shipping";
 import { authenticatedAction } from "@/lib/safe-action";
+
+// ✅ Importações do sistema de E-mail e Formatação
+import {
+  sendCustomerReceiptEmail,
+  sendStoreOwnerNotificationEmail,
+} from "@/lib/email";
+import { formatCentsToBRL } from "@/helpers/money";
 
 export const finishOrder = authenticatedAction<void, { orderId: string }>(
   async (_, ctx) => {
@@ -77,6 +86,7 @@ export const finishOrder = authenticatedAction<void, { orderId: string }>(
 
     let orderId: string | undefined;
 
+    // 📦 TRANSAÇÃO DO BANCO DE DADOS
     await db.transaction(async (tx) => {
       if (!cart.shippingAddress) throw new Error("Shipping address not found");
 
@@ -109,6 +119,7 @@ export const finishOrder = authenticatedAction<void, { orderId: string }>(
 
       await tx.insert(orderItemTable).values(orderItemsPayload);
 
+      // Desconta estoque
       for (const item of cart.items) {
         await tx
           .update(productVariantTable)
@@ -118,12 +129,77 @@ export const finishOrder = authenticatedAction<void, { orderId: string }>(
           .where(eq(productVariantTable.id, item.productVariant.id));
       }
 
+      // Limpa carrinho
       await tx.delete(cartItemTable).where(eq(cartItemTable.cartId, cart.id));
       await tx.delete(cartTable).where(eq(cartTable.id, cart.id));
     });
 
     if (!orderId) {
       throw new Error("Failed to create order");
+    }
+
+    // 📧 ==========================================
+    // ENVIO DE E-MAILS (Assíncrono e Isolado)
+    // ==========================================
+    if (!store.enableOnlinePayments) {
+      try {
+        const owner = await db.query.user.findFirst({
+          where: eq(user.id, store.ownerId),
+        });
+
+        // Mapeia todos os itens do carrinho para o e-mail
+        const formattedItems = cart.items.map((item) => ({
+          name: `${item.productVariant.product.name} (${item.productVariant.name})`,
+          quantity: item.quantity,
+          priceFormatted: formatCentsToBRL(
+            item.productVariant.priceInCents * item.quantity,
+          ),
+        }));
+
+        const formattedSubtotal = formatCentsToBRL(subtotalInCents);
+        const formattedShipping = formatCentsToBRL(shippingInCents);
+        const formattedTotal = formatCentsToBRL(totalPriceInCents);
+
+        // 1. Notifica o Cliente
+        await sendCustomerReceiptEmail(
+          cart.shippingAddress.email,
+          cart.shippingAddress.fullName,
+          orderNumber,
+          store.name,
+          formattedItems,
+          formattedSubtotal,
+          formattedShipping,
+          formattedTotal,
+          store.enableOnlinePayments, // ✅ 9º PARÂMETRO ADICIONADO AQUI
+        );
+
+        // 2. Notifica o Lojista
+        if (owner && owner.email) {
+          await sendStoreOwnerNotificationEmail(
+            owner.email,
+            orderNumber,
+            store.name,
+            formattedItems,
+            formattedSubtotal,
+            formattedShipping,
+            formattedTotal,
+            store.enableOnlinePayments, // ✅ 9º PARÂMETRO ADICIONADO AQUI
+          );
+
+          // 3. Cria alerta no Painel (Sino de Notificação)
+          await db.insert(notificationTable).values({
+            userId: owner.id,
+            title: "🛍️ Novo Pedido Recebido (Catálogo)!",
+            message: `O pedido #${orderNumber} no valor de ${formattedTotal} acabou de ser realizado através do carrinho.`,
+            type: "sale",
+          });
+        }
+      } catch (emailError) {
+        console.error(
+          "❌ Erro ao enviar e-mails de notificação (Carrinho):",
+          emailError,
+        );
+      }
     }
 
     return { orderId };

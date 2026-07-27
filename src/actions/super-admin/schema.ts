@@ -10,6 +10,7 @@ export const createStoreSchema = z.object({
       "O slug deve conter apenas letras minúsculas, números e hífens",
     ),
   ownerEmail: z.string().email("Introduza um e-mail válido"),
+  enableOnlinePayments: z.boolean(),
 });
 
 export type CreateStoreInput = z.infer<typeof createStoreSchema>;

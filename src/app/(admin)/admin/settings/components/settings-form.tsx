@@ -12,6 +12,7 @@ import {
   Loader2,
   Truck,
   QrCode,
+  Store,
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 
 interface SettingsFormProps {
   initialData: {
@@ -57,9 +59,33 @@ interface SettingsFormProps {
     stripeSecretKey: string | null;
     stripeWebhookSecret: string | null;
     mpAccessToken: string | null;
-    pixDiscountPercent: number; // ✅ NOVO: Propriedade para o desconto do PIX
+    pixDiscountPercent: number;
+    enableOnlinePayments: boolean;
   };
 }
+
+// ✅ NOVO: Função para aplicar a máscara (DDD) 99999-9999
+const formatPhone = (value: string) => {
+  if (!value) return "";
+  let v = value.replace(/\D/g, ""); // Remove tudo que não for número
+
+  // Caso o usuário já tenha salvo antes com '55' no banco (ex: 5511999999999),
+  // removemos o 55 para formatar corretamente no visual.
+  if (v.startsWith("55") && v.length === 13) {
+    v = v.slice(2);
+  }
+
+  v = v.slice(0, 11); // Limita a 11 dígitos (DDD + 9 dígitos)
+
+  if (v.length >= 3) {
+    v = `(${v.slice(0, 2)}) ${v.slice(2)}`;
+  }
+  if (v.length >= 10) {
+    v = `${v.slice(0, 10)}-${v.slice(10)}`;
+  }
+
+  return v;
+};
 
 export function SettingsForm({ initialData }: SettingsFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -93,6 +119,8 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
       instagramUrl: initialData.instagramUrl || "",
       whatsapp: initialData.whatsapp || "",
 
+      enableOnlinePayments: initialData.enableOnlinePayments ?? true,
+
       stripePublicKey: initialData.stripePublicKey || "",
       stripeSecretKey: initialData.stripeSecretKey || "",
       stripeWebhookSecret: initialData.stripeWebhookSecret || "",
@@ -107,12 +135,21 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
     },
   });
 
+  const isOnlinePaymentsEnabled = form.watch("enableOnlinePayments");
+
   const onSubmit = (data: UpdateStoreSettingsInput) => {
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("colorPrimary", data.colorPrimary);
     if (data.instagramUrl) formData.append("instagramUrl", data.instagramUrl);
-    if (data.whatsapp) formData.append("whatsapp", data.whatsapp);
+
+    // Na hora de salvar, enviamos os números limpos para o banco
+    if (data.whatsapp) {
+      const cleanWhatsapp = data.whatsapp.replace(/\D/g, "");
+      formData.append("whatsapp", cleanWhatsapp);
+    }
+
+    formData.append("enableOnlinePayments", String(data.enableOnlinePayments));
 
     if (data.stripePublicKey)
       formData.append("stripePublicKey", data.stripePublicKey);
@@ -124,7 +161,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
     if (data.mpAccessToken)
       formData.append("mpAccessToken", data.mpAccessToken);
 
-    // ✅ NOVO: Anexando o desconto no FormData
     if (data.pixDiscountPercent)
       formData.append("pixDiscountPercent", data.pixDiscountPercent);
 
@@ -171,7 +207,43 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Identidade Visual */}
+        <Card className="border-primary/50 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5" /> Modelo de Vendas
+            </CardTitle>
+            <CardDescription>
+              Escolha se deseja receber pagamentos online automaticamente ou
+              operar como um catálogo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              name="enableOnlinePayments"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base font-semibold">
+                      Aceitar Pagamentos Online
+                    </FormLabel>
+                    <p className="text-muted-foreground text-[13px]">
+                      Se desativado, o checkout apenas reservará o estoque e o
+                      cliente finalizará o pagamento manualmente via WhatsApp.
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -183,7 +255,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <FormField
-              control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
@@ -199,7 +270,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
               )}
             />
             <FormField
-              control={form.control}
               name="colorPrimary"
               render={({ field }) => (
                 <FormItem>
@@ -225,7 +295,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </CardContent>
         </Card>
 
-        {/* Mídias da Vitrine */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -253,7 +322,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
 
             <Separator />
 
-            {/* Banner 1 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold tracking-tight">
                 Primeiro Banner
@@ -292,7 +360,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
 
             <Separator />
 
-            {/* Banner 2 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold tracking-tight">
                 Segundo Banner (Opcional)
@@ -331,7 +398,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </CardContent>
         </Card>
 
-        {/* Logística e Frete */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -344,7 +410,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <FormField
-              control={form.control}
               name="fixedShippingFee"
               render={({ field }) => (
                 <FormItem>
@@ -363,7 +428,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
               )}
             />
             <FormField
-              control={form.control}
               name="freeShippingThreshold"
               render={({ field }) => (
                 <FormItem>
@@ -387,144 +451,141 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </CardContent>
         </Card>
 
-        {/* Pagamentos (Stripe) */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <LinkIcon className="h-5 w-5" /> Pagamentos (Cartão via Stripe)
-            </CardTitle>
-            <CardDescription>
-              Conecte sua conta do Stripe para processar cartões de crédito de
-              forma segura.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="stripePublicKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Chave Pública (Publishable Key)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="pk_test_..."
-                      {...field}
-                      value={field.value || ""}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="stripeSecretKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Chave Secreta (Secret Key)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="sk_test_..."
-                      {...field}
-                      value={field.value || ""}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="stripeWebhookSecret"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Segredo do Webhook (Webhook Secret)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="whsec_..."
-                      {...field}
-                      value={field.value || ""}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <p className="text-muted-foreground mt-1 text-[10px]">
-                    Configure seu Webhook no Stripe para apontar para:
-                    <code className="bg-muted ml-1 rounded px-1 py-0.5">
-                      {process.env.NEXT_PUBLIC_APP_URL}
-                      /api/stripe/webhook?storeId={initialData.id}
-                    </code>
-                  </p>
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
+        {isOnlinePaymentsEnabled && (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LinkIcon className="h-5 w-5" /> Pagamentos (Cartão via
+                  Stripe)
+                </CardTitle>
+                <CardDescription>
+                  Conecte sua conta do Stripe para processar cartões de crédito
+                  de forma segura.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  name="stripePublicKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Chave Pública (Publishable Key)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="pk_test_..."
+                          {...field}
+                          value={field.value || ""}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="stripeSecretKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Chave Secreta (Secret Key)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="sk_test_..."
+                          {...field}
+                          value={field.value || ""}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="stripeWebhookSecret"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Segredo do Webhook (Webhook Secret)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="whsec_..."
+                          {...field}
+                          value={field.value || ""}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <p className="text-muted-foreground mt-1 text-[10px]">
+                        Configure seu Webhook no Stripe para apontar para:
+                        <code className="bg-muted ml-1 rounded px-1 py-0.5">
+                          {process.env.NEXT_PUBLIC_APP_URL}
+                          /api/stripe/webhook?storeId={initialData.id}
+                        </code>
+                      </p>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
 
-        {/* Pagamentos (Mercado Pago PIX) */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-emerald-600">
-              <QrCode className="h-5 w-5" /> Pagamentos (PIX via Mercado Pago)
-            </CardTitle>
-            <CardDescription>
-              Gere QR Codes de PIX com aprovação instantânea e ofereça
-              descontos.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="mpAccessToken"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Access Token (Produção)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="APP_USR-..."
-                      {...field}
-                      value={field.value || ""}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <p className="text-muted-foreground mt-1 text-[10px]">
-                    Gere este token no painel de desenvolvedores do Mercado Pago
-                    (Credenciais de Produção).
-                  </p>
-                </FormItem>
-              )}
-            />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-emerald-600">
+                  <QrCode className="h-5 w-5" /> Pagamentos (PIX via Mercado
+                  Pago)
+                </CardTitle>
+                <CardDescription>
+                  Gere QR Codes de PIX com aprovação instantânea e ofereça
+                  descontos.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  name="mpAccessToken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Access Token (Produção)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="APP_USR-..."
+                          {...field}
+                          value={field.value || ""}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <p className="text-muted-foreground mt-1 text-[10px]">
+                        Gere este token no painel de desenvolvedores do Mercado
+                        Pago (Credenciais de Produção).
+                      </p>
+                    </FormItem>
+                  )}
+                />
 
-            {/* ✅ NOVO: Input de Desconto PIX */}
-            <FormField
-              control={form.control}
-              name="pixDiscountPercent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Desconto para PIX (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="Ex: 5 para 5% de desconto"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <p className="text-muted-foreground mt-1 text-[10px]">
-                    Incentive vendas à vista oferecendo um desconto automático
-                    no checkout (Deixe 0 para nenhum).
-                  </p>
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
+                <FormField
+                  name="pixDiscountPercent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Desconto para PIX (%)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="Ex: 5 para 5% de desconto"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <p className="text-muted-foreground mt-1 text-[10px]">
+                        Incentive vendas à vista oferecendo um desconto
+                        automático no checkout (Deixe 0 para nenhum).
+                      </p>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          </>
+        )}
 
-        {/* Contato e Redes Sociais */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -536,7 +597,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <FormField
-              control={form.control}
               name="instagramUrl"
               render={({ field }) => (
                 <FormItem>
@@ -552,17 +612,23 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
                 </FormItem>
               )}
             />
+            {/* ✅ AQUI ESTÁ A MÁSCARA SENDO APLICADA */}
             <FormField
-              control={form.control}
               name="whatsapp"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Número do WhatsApp</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="5511999999999"
+                      placeholder="(11) 99999-9999"
                       {...field}
-                      value={field.value || ""}
+                      // Aplica a máscara no valor atual do state
+                      value={formatPhone(field.value || "")}
+                      // Aplica a máscara no momento da digitação
+                      onChange={(e) => {
+                        field.onChange(formatPhone(e.target.value));
+                      }}
+                      maxLength={15}
                       disabled={isPending}
                     />
                   </FormControl>
@@ -572,7 +638,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </CardContent>
         </Card>
 
-        {/* Botão Salvar */}
         <div className="flex justify-end">
           <Button type="submit" size="lg" disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

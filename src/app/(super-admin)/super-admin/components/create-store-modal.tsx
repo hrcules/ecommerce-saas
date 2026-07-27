@@ -23,12 +23,14 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch"; // ✅ NOVO COMPONENTE
 
 export function CreateStoreModal() {
   const [open, setOpen] = useState(false);
@@ -36,7 +38,12 @@ export function CreateStoreModal() {
 
   const form = useForm<CreateStoreInput>({
     resolver: zodResolver(createStoreSchema),
-    defaultValues: { name: "", slug: "", ownerEmail: "" },
+    defaultValues: {
+      name: "",
+      slug: "",
+      ownerEmail: "",
+      enableOnlinePayments: true,
+    },
   });
 
   const onSubmit = (data: CreateStoreInput) => {
@@ -108,6 +115,29 @@ export function CreateStoreModal() {
                 </FormItem>
               )}
             />
+
+            {/* ✅ NOVA CHAVE (SWITCH) DE MODO DE PAGAMENTO */}
+            <FormField
+              control={form.control}
+              name="enableOnlinePayments"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Pagamento Online</FormLabel>
+                    <FormDescription>
+                      Desative para usar a loja apenas como Catálogo.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Criar Vitrine

@@ -13,7 +13,7 @@ import { formatAddress } from "../helpers/address";
 import FinishOrderButton from "./components/finish-order-button";
 import CartSteper from "../components/cart-steper";
 
-// NOVO: Importando o nosso Helper de Frete!
+// Helper de Frete
 import { calculateShipping } from "@/helpers/shipping";
 import { getTenantStore } from "@/lib/tentat";
 
@@ -103,6 +103,9 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
 
   const store = await getTenantStore();
 
+  // Caso o atributo não esteja definido por fallback, assume true
+  const enableOnlinePayments = store?.enableOnlinePayments ?? true;
+
   const freteInCents = calculateShipping(
     subtotalInCents,
     store?.fixedShippingFeeInCents || 0,
@@ -134,6 +137,7 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
                   variantId={variantId}
                   quantity={quantity ? Number(quantity) : undefined}
                   addressId={addressId}
+                  enableOnlinePayments={enableOnlinePayments}
                 />
               </CardContent>
             </Card>
@@ -143,7 +147,9 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
               freteInCents={freteInCents}
               totalInCents={totalInCents}
               products={products}
-              pixDiscountPercent={store?.pixDiscountPercent || 0}
+              pixDiscountPercent={
+                enableOnlinePayments ? store?.pixDiscountPercent || 0 : 0
+              }
             />
           </div>
         </div>

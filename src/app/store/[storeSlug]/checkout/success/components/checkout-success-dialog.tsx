@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +12,33 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { formatCentsToBRL } from "@/helpers/money";
 
-const CheckoutSuccessDialog = () => {
+interface CheckoutSuccessDialogProps {
+  enableOnlinePayments: boolean;
+  storePhone?: string | null;
+  storeName: string;
+  orderNumber: number;
+  orderTotalInCents: number;
+}
+
+const CheckoutSuccessDialog = ({
+  enableOnlinePayments,
+  storePhone,
+  storeName,
+  orderNumber,
+  orderTotalInCents,
+}: CheckoutSuccessDialogProps) => {
+  let whatsappUrl = "";
+  if (!enableOnlinePayments && storePhone) {
+    const cleanPhone = storePhone.replace(/\D/g, "");
+    const formattedTotal = formatCentsToBRL(orderTotalInCents);
+
+    const message = `Olá! Acabei de fazer o pedido #${orderNumber} no valor de ${formattedTotal} na ${storeName}. Poderia me enviar as opções de pagamento (Link ou PIX) para eu finalizar a compra e enviar o comprovante?`;
+
+    whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
+  }
+
   return (
     <Dialog open={true} onOpenChange={() => {}}>
       <DialogContent className="max-w-[90%] rounded-[24px] p-6 text-center md:max-w-[500px] md:rounded-[32px] md:p-10">
@@ -30,19 +56,33 @@ const CheckoutSuccessDialog = () => {
         </DialogTitle>
 
         <DialogDescription className="text-muted-foreground font-medium md:mx-auto md:max-w-[90%] md:text-base">
-          Seu pedido foi realizado com sucesso. Você receberá um e-mail de
-          confirmação em breve. Você pode acompanhar o status na seção de “Meus
-          Pedidos”.
+          {enableOnlinePayments
+            ? "Seu pedido foi realizado com sucesso. Você receberá um e-mail de confirmação em breve. Você pode acompanhar o status na seção de “Meus Pedidos”."
+            : "Seu pedido foi reservado com sucesso! Para que a loja inicie o preparo e envio, por favor, solicite o link de pagamento via WhatsApp."}
         </DialogDescription>
 
-        <DialogFooter className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-center sm:gap-4 md:mt-8">
-          <Button
-            className="w-full rounded-full px-6 sm:w-auto"
-            size="lg"
-            asChild
-          >
-            <Link href="/orders">Ver meus pedidos</Link>
-          </Button>
+        <DialogFooter className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4 md:mt-8">
+          {!enableOnlinePayments && whatsappUrl ? (
+            <Button
+              className="w-full rounded-full bg-[#25D366] px-6 text-white hover:bg-[#1DA851] sm:w-auto"
+              size="lg"
+              asChild
+            >
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Solicitar Pagamento
+              </a>
+            </Button>
+          ) : (
+            <Button
+              className="w-full rounded-full px-6 sm:w-auto"
+              size="lg"
+              asChild
+            >
+              <Link href="/orders">Ver meus pedidos</Link>
+            </Button>
+          )}
+
           <Button
             className="w-full rounded-full px-6 sm:w-auto"
             variant="outline"

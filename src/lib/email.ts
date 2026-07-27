@@ -3,19 +3,18 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY || "";
 
 const SENDER_EMAIL = "nao-responda@bewearshop.com.br";
 
-// NOVO: Tipo para padronizar os itens no e-mail
 export interface EmailOrderItem {
   name: string;
   quantity: number;
   priceFormatted: string;
 }
 
-// NOVO: Função auxiliar para gerar a tabela de itens HTML
 const generateItemsTableHtml = (
   items: EmailOrderItem[],
   subtotal: string,
   shipping: string,
   total: string,
+  enableOnlinePayments: boolean,
 ) => {
   const itemsRows = items
     .map(
@@ -28,6 +27,9 @@ const generateItemsTableHtml = (
   `,
     )
     .join("");
+
+  const totalLabel = enableOnlinePayments ? "Total Pago:" : "Total a Pagar:";
+  const totalColor = enableOnlinePayments ? "#16a34a" : "#d97706";
 
   return `
     <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
@@ -51,8 +53,8 @@ const generateItemsTableHtml = (
           <td style="text-align: right; padding: 5px; color: #555;">${shipping}</td>
         </tr>
         <tr>
-          <td colspan="2" style="text-align: right; padding: 10px 5px; font-weight: bold; font-size: 16px; color: #333;">Total Pago:</td>
-          <td style="text-align: right; padding: 10px 5px; font-weight: bold; font-size: 16px; color: #16a34a;">${total}</td>
+          <td colspan="2" style="text-align: right; padding: 10px 5px; font-weight: bold; font-size: 16px; color: #333;">${totalLabel}</td>
+          <td style="text-align: right; padding: 10px 5px; font-weight: bold; font-size: 16px; color: ${totalColor};">${total}</td>
         </tr>
       </tfoot>
     </table>
@@ -64,11 +66,11 @@ export async function sendCustomerReceiptEmail(
   customerName: string,
   orderNumber: number,
   storeName: string,
-  // NOVOS PARÂMETROS
   items: EmailOrderItem[],
   subtotalFormatted: string,
   shippingFormatted: string,
   totalPriceFormatted: string,
+  enableOnlinePayments: boolean,
 ) {
   try {
     const tableHtml = generateItemsTableHtml(
@@ -76,7 +78,16 @@ export async function sendCustomerReceiptEmail(
       subtotalFormatted,
       shippingFormatted,
       totalPriceFormatted,
+      enableOnlinePayments,
     );
+
+    const subjectText = enableOnlinePayments
+      ? `Confirmação do Pedido #${orderNumber} - ${storeName}`
+      : `Pedido Reservado #${orderNumber} - ${storeName}`;
+
+    const introText = enableOnlinePayments
+      ? "O seu pagamento foi aprovado e a loja já foi notificada para separar o seu pedido."
+      : "O seu pedido foi reservado com sucesso! Lembre-se de entrar em contato com a loja via WhatsApp para finalizar o pagamento e garantir seus produtos.";
 
     const response = await fetch(BREVO_API_URL, {
       method: "POST",
@@ -88,11 +99,11 @@ export async function sendCustomerReceiptEmail(
       body: JSON.stringify({
         sender: { name: `Equipe ${storeName}`, email: SENDER_EMAIL },
         to: [{ email: customerEmail, name: customerName }],
-        subject: `Confirmação do Pedido #${orderNumber} - ${storeName}`,
+        subject: subjectText,
         htmlContent: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-            <h2 style="color: #333;">Obrigado pela sua compra, ${customerName.split(" ")[0]}! 🎉</h2>
-            <p style="color: #555; line-height: 1.5;">O seu pagamento foi aprovado e a loja já foi notificada para separar o seu pedido.</p>
+            <h2 style="color: #333;">Obrigado pela sua preferência, ${customerName.split(" ")[0]}! 🎉</h2>
+            <p style="color: #555; line-height: 1.5;">${introText}</p>
             
             <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 0 0 10px 0; font-weight: bold; color: #333; font-size: 16px;">Resumo do Pedido #${orderNumber}</p>
@@ -120,11 +131,11 @@ export async function sendStoreOwnerNotificationEmail(
   ownerEmail: string,
   orderNumber: number,
   storeName: string,
-  // NOVOS PARÂMETROS
   items: EmailOrderItem[],
   subtotalFormatted: string,
   shippingFormatted: string,
   totalPriceFormatted: string,
+  enableOnlinePayments: boolean,
 ) {
   try {
     const tableHtml = generateItemsTableHtml(
@@ -132,7 +143,20 @@ export async function sendStoreOwnerNotificationEmail(
       subtotalFormatted,
       shippingFormatted,
       totalPriceFormatted,
+      enableOnlinePayments,
     );
+
+    const subjectText = enableOnlinePayments
+      ? `💰 Nova Venda Realizada! Pedido #${orderNumber}`
+      : `🛒 Novo Pedido Reservado! Pedido #${orderNumber}`;
+
+    const titleText = enableOnlinePayments
+      ? `Nova Venda na ${storeName}! 🚀`
+      : `Novo Pedido na ${storeName}! 🛒`;
+
+    const introText = enableOnlinePayments
+      ? "Ótimas notícias! Um cliente acabou de ter o pagamento aprovado."
+      : "Ótimas notícias! Um cliente acabou de fazer um pedido e entrará em contato via WhatsApp para pagamento.";
 
     const response = await fetch(BREVO_API_URL, {
       method: "POST",
@@ -144,18 +168,18 @@ export async function sendStoreOwnerNotificationEmail(
       body: JSON.stringify({
         sender: { name: "Notificações BEWEAR", email: SENDER_EMAIL },
         to: [{ email: ownerEmail }],
-        subject: `💰 Nova Venda Realizada! Pedido #${orderNumber}`,
+        subject: subjectText,
         htmlContent: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px; border-top: 5px solid #8B5CF6;">
-            <h2 style="color: #333;">Nova Venda na ${storeName}! 🚀</h2>
-            <p style="color: #555; line-height: 1.5;">Ótimas notícias! Um cliente acabou de ter o pagamento aprovado.</p>
+            <h2 style="color: #333;">${titleText}</h2>
+            <p style="color: #555; line-height: 1.5;">${introText}</p>
             
             <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 0 0 10px 0; font-weight: bold; color: #333; font-size: 16px;">Detalhes do Pedido #${orderNumber}</p>
               ${tableHtml}
             </div>
             
-            <p style="color: #555; font-size: 14px;">Acesse o seu painel Admin para ver os detalhes de envio e separar os produtos.</p>
+            <p style="color: #555; font-size: 14px;">Acesse o seu painel Admin para ver os detalhes completos e gerenciar os status.</p>
           </div>
         `,
       }),
@@ -168,6 +192,6 @@ export async function sendStoreOwnerNotificationEmail(
 
     console.log(`✅ Email de notificação enviado para o lojista ${ownerEmail}`);
   } catch (error) {
-    console.error("❌ Erro ao enviar email para o   lojista:", error);
+    console.error("❌ Erro ao enviar email para o lojista:", error);
   }
 }

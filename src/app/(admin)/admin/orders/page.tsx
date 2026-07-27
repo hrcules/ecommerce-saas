@@ -224,9 +224,12 @@ export default async function AdminOrdersPage({
     },
   });
 
-  const validOrders = allOrders.filter((order) => order.status !== "pending");
-  const abandonedCarts = allOrders.filter(
-    (order) => order.status === "pending",
+  const validOrders = allOrders.filter(
+    (order) => order.status !== "pending" && order.status !== "cancelled",
+  );
+  const pendingOrders = allOrders.filter((order) => order.status === "pending");
+  const cancelledOrders = allOrders.filter(
+    (order) => order.status === "cancelled",
   );
 
   return (
@@ -243,22 +246,28 @@ export default async function AdminOrdersPage({
       <Tabs defaultValue="valid" className="w-full">
         <TabsList
           variant="line"
-          className="grid w-full grid-cols-2 md:w-[400px]"
+          className="grid w-full grid-cols-3 md:w-[600px]"
         >
           <TabsTrigger value="valid">
-            Vendas Confirmadas ({validOrders.length})
+            Confirmados ({validOrders.length})
           </TabsTrigger>
-          <TabsTrigger value="abandoned">
-            Carrinhos Abandonados ({abandonedCarts.length})
+          <TabsTrigger value="pending">
+            {store.enableOnlinePayments
+              ? "Carrinhos Abandonados"
+              : "Aguardando Pagto"}{" "}
+            ({pendingOrders.length})
+          </TabsTrigger>
+          <TabsTrigger value="cancelled">
+            Cancelados ({cancelledOrders.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="valid">
           <Card>
             <CardHeader>
-              <CardTitle>Histórico de Vendas</CardTitle>
+              <CardTitle>Vendas Confirmadas</CardTitle>
               <CardDescription>
-                Pedidos que já passaram pelo checkout.
+                Pedidos que já foram pagos e estão prontos para envio.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -270,19 +279,41 @@ export default async function AdminOrdersPage({
           </Card>
         </TabsContent>
 
-        <TabsContent value="abandoned">
+        <TabsContent value="pending">
           <Card>
             <CardHeader>
-              <CardTitle>Carrinhos Abandonados</CardTitle>
+              <CardTitle>
+                {store.enableOnlinePayments
+                  ? "Carrinhos Abandonados"
+                  : "Aguardando Pagamento"}
+              </CardTitle>
               <CardDescription>
-                Clientes que geraram a intenção mas não finalizaram o pagamento.
-                Ótima oportunidade de remarketing!
+                {store.enableOnlinePayments
+                  ? "Clientes que geraram a intenção mas não finalizaram o pagamento. Ótima oportunidade de remarketing!"
+                  : "Pedidos realizados pelo catálogo que estão aguardando o envio do comprovante pelo cliente."}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <OrdersList
-                orders={abandonedCarts}
-                emptyMessage="Nenhum carrinho abandonado."
+                orders={pendingOrders}
+                emptyMessage="Nenhum pedido pendente."
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="cancelled">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pedidos Cancelados</CardTitle>
+              <CardDescription>
+                Pedidos cancelados e com estoque estornado.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <OrdersList
+                orders={cancelledOrders}
+                emptyMessage="Nenhum pedido cancelado."
               />
             </CardContent>
           </Card>

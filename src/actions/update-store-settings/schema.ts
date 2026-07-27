@@ -13,6 +13,8 @@ export const updateStoreSettingsSchema = z.object({
   instagramUrl: z.string().optional().nullable(),
   whatsapp: z.string().optional().nullable(),
 
+  enableOnlinePayments: z.boolean(),
+
   fixedShippingFee: z.string().min(1, "O valor do frete é obrigatório"),
   freeShippingThreshold: z.string().optional().nullable(),
 

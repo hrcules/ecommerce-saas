@@ -8,25 +8,38 @@ import { categoryTable } from "@/db/schema";
 import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ O Escudo
 import { upsertCategorySchema, UpsertCategorySchema } from "./schema";
 
-// Note que aqui o input é o UpsertCategorySchema, não um FormData!
+function generateSlug(text: string) {
+  return text
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]+/g, "")
+    .replace(/--+/g, "-");
+}
+
 export const upsertCategory = tenantOwnerAction<UpsertCategorySchema, void>(
   async (data, ctx) => {
     const { storeId } = ctx;
 
     const { id, name, slug } = upsertCategorySchema.parse(data);
 
+    const safeSlug = generateSlug(slug || name);
+
     if (id) {
       await db
         .update(categoryTable)
-        .set({ name, slug, updatedAt: new Date() })
+        .set({ name, slug: safeSlug, updatedAt: new Date() })
         .where(
-          and(eq(categoryTable.id, id), eq(categoryTable.storeId, storeId)), // 🛡️ Segurança dupla
+          and(eq(categoryTable.id, id), eq(categoryTable.storeId, storeId)),
         );
     } else {
       await db.insert(categoryTable).values({
         name,
-        slug,
-        storeId: storeId, // 🛡️ Loja correta do contexto
+        slug: safeSlug,
+        storeId: storeId,
       });
     }
 
