@@ -139,6 +139,7 @@ export const createDirectOrder = authenticatedAction<
           formattedSubtotal,
           formattedShipping,
           formattedTotal,
+          store.enableOnlinePayments, // ✅ 9º PARÂMETRO ADICIONADO AQUI
         );
 
         if (owner && owner.email) {
@@ -150,6 +151,7 @@ export const createDirectOrder = authenticatedAction<
             formattedSubtotal,
             formattedShipping,
             formattedTotal,
+            store.enableOnlinePayments, // ✅ 9º PARÂMETRO ADICIONADO AQUI
           );
 
           await db.insert(notificationTable).values({
