@@ -85,6 +85,10 @@ export const storeTable = pgTable("store", {
 
   pixDiscountPercent: integer("pix_discount_percent").default(0).notNull(),
 
+  enableOnlinePayments: boolean("enable_online_payments")
+    .default(true)
+    .notNull(),
+
   isActive: boolean("is_active").default(true).notNull(),
 
   stripePublicKey: text("stripe_public_key"),
@@ -264,7 +268,7 @@ export const orderTable = pgTable("order", {
   storeId: uuid("store_id")
     .notNull()
     .references(() => storeTable.id, { onDelete: "cascade" }),
-  stripeCheckoutSessionId: text("stripe_checkout_session_id").notNull(),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
 
   pixQrCode: text("pix_qr_code"),
   pixQrCodeBase64: text("pix_qr_code_base64"),

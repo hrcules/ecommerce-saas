@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, sql } from "drizzle-orm"; // 👈 Importamos o 'sql' para subtrair no banco
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -9,10 +9,18 @@ import {
   productVariantTable,
   shippingAddressTable,
   storeTable,
+  user,
+  notificationTable,
 } from "@/db/schema";
 import { authenticatedAction } from "@/lib/safe-action";
 import { createDirectOrderSchema } from "./schema";
 import { calculateShipping } from "@/helpers/shipping";
+
+import {
+  sendCustomerReceiptEmail,
+  sendStoreOwnerNotificationEmail,
+} from "@/lib/email";
+import { formatCentsToBRL } from "@/helpers/money";
 
 export const createDirectOrder = authenticatedAction<
   unknown,
@@ -34,7 +42,6 @@ export const createDirectOrder = authenticatedAction<
     );
   }
 
-  // 🛡️ NOVA TRAVA: Verifica se tem estoque suficiente antes de prosseguir!
   if (variant.stock < quantity) {
     throw new Error(
       `Estoque insuficiente. Temos apenas ${variant.stock} unidades disponíveis.`,
@@ -94,14 +101,68 @@ export const createDirectOrder = authenticatedAction<
       priceInCents: variant.priceInCents,
     });
 
-    // 📦 PASSO 1 DA ABORDAGEM 1: A RESERVA DE ESTOQUE
-    // Descontamos a quantidade exata comprada do estoque atual
+    // RESERVA DE ESTOQUE
     await db
       .update(productVariantTable)
       .set({
         stock: sql`${productVariantTable.stock} - ${quantity}`,
       })
       .where(eq(productVariantTable.id, variant.id));
+
+    // 📧 ==========================================
+    // ENVIO DE E-MAILS (Assíncrono e Isolado)
+    // ==========================================
+    if (!store.enableOnlinePayments) {
+      try {
+        const owner = await db.query.user.findFirst({
+          where: eq(user.id, store.ownerId),
+        });
+
+        const formattedItems = [
+          {
+            name: `${variant.product.name} (${variant.name})`,
+            quantity: quantity,
+            priceFormatted: formatCentsToBRL(variant.priceInCents * quantity),
+          },
+        ];
+
+        const formattedSubtotal = formatCentsToBRL(subtotalInCents);
+        const formattedShipping = formatCentsToBRL(shippingInCents);
+        const formattedTotal = formatCentsToBRL(totalInCents);
+
+        await sendCustomerReceiptEmail(
+          address.email,
+          address.fullName,
+          orderNumber,
+          store.name,
+          formattedItems,
+          formattedSubtotal,
+          formattedShipping,
+          formattedTotal,
+        );
+
+        if (owner && owner.email) {
+          await sendStoreOwnerNotificationEmail(
+            owner.email,
+            orderNumber,
+            store.name,
+            formattedItems,
+            formattedSubtotal,
+            formattedShipping,
+            formattedTotal,
+          );
+
+          await db.insert(notificationTable).values({
+            userId: owner.id,
+            title: "🛍️ Novo Pedido Recebido (Catálogo)!",
+            message: `O pedido #${orderNumber} no valor de ${formattedTotal} acabou de ser realizado. Aguarde o pagamento direto pelo cliente.`,
+            type: "sale",
+          });
+        }
+      } catch (emailError) {
+        console.error("❌ Erro ao enviar e-mails de notificação:", emailError);
+      }
+    }
 
     return { orderId: order.id };
   } catch (error) {

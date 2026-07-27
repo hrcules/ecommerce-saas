@@ -1,15 +1,15 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/db";
-import { orderTable } from "@/db/schema";
-import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ O Escudo
+import { orderTable, orderItemTable, productVariantTable } from "@/db/schema";
+import { tenantOwnerAction } from "@/lib/safe-action";
 
 export const updateOrderStatusAction = tenantOwnerAction<
-  { orderId: string; newStatus: string }, // Tipo do Input
-  { success: boolean } // Tipo do Retorno
+  { orderId: string; newStatus: string },
+  { success: boolean }
 >(async ({ orderId, newStatus }, ctx) => {
   const { storeId } = ctx;
 
@@ -17,9 +17,29 @@ export const updateOrderStatusAction = tenantOwnerAction<
     where: eq(orderTable.id, orderId),
   });
 
-  // 🛡️ Segurança: Garantimos que o pedido pertence à loja atual
   if (!order || order.storeId !== storeId) {
     throw new Error("Pedido não encontrado ou não pertence à sua loja.");
+  }
+
+  if (order.status === "cancelled" && newStatus !== "cancelled") {
+    throw new Error(
+      "Não é possível alterar o status de um pedido já cancelado.",
+    );
+  }
+
+  if (newStatus === "cancelled" && order.status !== "cancelled") {
+    const orderItems = await db.query.orderItemTable.findMany({
+      where: eq(orderItemTable.orderId, orderId),
+    });
+
+    for (const item of orderItems) {
+      await db
+        .update(productVariantTable)
+        .set({
+          stock: sql`${productVariantTable.stock} + ${item.quantity}`,
+        })
+        .where(eq(productVariantTable.id, item.productVariantId));
+    }
   }
 
   await db

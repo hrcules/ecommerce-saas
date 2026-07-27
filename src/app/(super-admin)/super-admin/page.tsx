@@ -91,8 +91,10 @@ export default async function SuperAdminPage() {
                 }`}
               >
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <p className="text-lg font-semibold">{store.name}</p>
+
+                    {/* Badge de Status da Loja */}
                     <span
                       className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
                         store.isActive
@@ -102,8 +104,22 @@ export default async function SuperAdminPage() {
                     >
                       {store.isActive ? "Online" : "Suspensa"}
                     </span>
+
+                    {/* ✅ NOVA BADGE: Modo de Pagamento */}
+                    <span
+                      className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
+                        store.enableOnlinePayments
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                          : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                      }`}
+                    >
+                      {store.enableOnlinePayments
+                        ? "Checkout Online"
+                        : "Modo Catálogo"}
+                    </span>
                   </div>
-                  <div className="text-muted-foreground flex flex-col text-sm sm:flex-row sm:gap-4">
+
+                  <div className="text-muted-foreground mt-1 flex flex-col text-sm sm:flex-row sm:gap-4">
                     <span>
                       <strong className="text-foreground font-medium">
                         Id:

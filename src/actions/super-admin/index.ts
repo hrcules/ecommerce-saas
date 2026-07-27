@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { db } from "@/db";
 import { storeTable, user } from "@/db/schema";
-import { superAdminAction } from "@/lib/safe-action"; // ✅ Escudo Super Admin
+import { superAdminAction } from "@/lib/safe-action";
 import { CreateStoreInput, createStoreSchema } from "./schema";
 
 export const toggleStoreStatus = superAdminAction<
@@ -27,7 +27,8 @@ export const createStore = superAdminAction<
   CreateStoreInput,
   { success: boolean }
 >(async (data) => {
-  const { name, slug, ownerEmail } = createStoreSchema.parse(data);
+  const { name, slug, ownerEmail, enableOnlinePayments } =
+    createStoreSchema.parse(data);
 
   const merchant = await db.query.user.findFirst({
     where: eq(user.email, ownerEmail),
@@ -45,6 +46,7 @@ export const createStore = superAdminAction<
       slug,
       ownerId: merchant.id,
       isActive: true,
+      enableOnlinePayments,
     });
 
     await tx

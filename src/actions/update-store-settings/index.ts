@@ -31,7 +31,6 @@ export const updateStoreSettingsAction = tenantOwnerAction<
 >(async (formData, ctx) => {
   const { storeId } = ctx;
 
-  // Precisamos buscar a loja novamente para pegar as URLs antigas das imagens
   const store = await db.query.storeTable.findFirst({
     where: eq(storeTable.id, storeId),
   });
@@ -42,6 +41,9 @@ export const updateStoreSettingsAction = tenantOwnerAction<
   const colorPrimary = formData.get("colorPrimary") as string;
   const instagramUrl = formData.get("instagramUrl") as string;
   const whatsapp = formData.get("whatsapp") as string;
+
+  // ✅ NOVO: Extraindo o booleano do FormData
+  const enableOnlinePayments = formData.get("enableOnlinePayments") === "true";
 
   const stripePublicKey = formData.get("stripePublicKey") as string;
   const stripeSecretKey = formData.get("stripeSecretKey") as string;
@@ -111,6 +113,7 @@ export const updateStoreSettingsAction = tenantOwnerAction<
       colorPrimary,
       instagramUrl,
       whatsapp,
+      enableOnlinePayments, // ✅ NOVO: Salvando no banco
       logoUrl,
       banner1DesktopUrl,
       banner1MobileUrl,
@@ -127,7 +130,7 @@ export const updateStoreSettingsAction = tenantOwnerAction<
         : 0,
       updatedAt: new Date(),
     })
-    .where(eq(storeTable.id, storeId)); // 🛡️ Segurança: Atualiza apenas a loja do contexto
+    .where(eq(storeTable.id, storeId));
 
   revalidatePath("/admin/settings");
   revalidatePath("/");
