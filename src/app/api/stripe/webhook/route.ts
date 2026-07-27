@@ -142,6 +142,7 @@ export const POST = async (request: Request) => {
           formattedSubtotal,
           formattedShipping,
           formattedTotal,
+          store.enableOnlinePayments,
         );
 
         if (owner && owner.email) {
@@ -153,6 +154,7 @@ export const POST = async (request: Request) => {
             formattedSubtotal,
             formattedShipping,
             formattedTotal,
+            store.enableOnlinePayments,
           );
 
           await db.insert(notificationTable).values({

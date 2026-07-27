@@ -170,6 +170,7 @@ export const finishOrder = authenticatedAction<void, { orderId: string }>(
           formattedSubtotal,
           formattedShipping,
           formattedTotal,
+          store.enableOnlinePayments, // ✅ 9º PARÂMETRO ADICIONADO AQUI
         );
 
         // 2. Notifica o Lojista
@@ -182,6 +183,7 @@ export const finishOrder = authenticatedAction<void, { orderId: string }>(
             formattedSubtotal,
             formattedShipping,
             formattedTotal,
+            store.enableOnlinePayments, // ✅ 9º PARÂMETRO ADICIONADO AQUI
           );
 
           // 3. Cria alerta no Painel (Sino de Notificação)
