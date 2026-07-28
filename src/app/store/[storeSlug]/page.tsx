@@ -1,13 +1,18 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import Image from "next/image";
 
 import CategorySelector from "@/components/common/category-selector";
 import Header from "@/components/common/header/index";
 import { ProductList } from "@/components/common/product-list";
 import { db } from "@/db";
-import { categoryTable, productTable } from "@/db/schema";
+import {
+  categoryTable,
+  orderItemTable,
+  orderTable,
+  productTable,
+  productVariantTable,
+} from "@/db/schema";
 import { getTenantStore } from "@/lib/tentat";
-import { BannerRenderer } from "@/components/common/banner-renderer";
 
 export default async function Home() {
   const store = await getTenantStore();
@@ -20,16 +25,92 @@ export default async function Home() {
     );
   }
 
-  const products = await db.query.productTable.findMany({
+  // ==========================================
+  // 1. MAIS VENDIDOS (Com Preenchimento Inteligente)
+  // ==========================================
+
+  const bestSellerRecords = await db
+    .select({
+      productId: productVariantTable.productId,
+      totalSold: sql<number>`sum(${orderItemTable.quantity})`.mapWith(Number),
+    })
+    .from(orderItemTable)
+    .innerJoin(orderTable, eq(orderItemTable.orderId, orderTable.id))
+    .innerJoin(
+      productVariantTable,
+      eq(orderItemTable.productVariantId, productVariantTable.id),
+    )
+    .where(
+      and(
+        eq(orderTable.storeId, store.id),
+        notInArray(orderTable.status, ["pending", "canceled"]),
+      ),
+    )
+    .groupBy(productVariantTable.productId)
+    .orderBy(desc(sql<number>`sum(${orderItemTable.quantity})`))
+    .limit(12);
+
+  const topProductIds = bestSellerRecords.map((r) => r.productId);
+
+  const realBestSellers =
+    topProductIds.length > 0
+      ? await db.query.productTable.findMany({
+          where: inArray(productTable.id, topProductIds),
+          with: { variants: true, category: true },
+        })
+      : [];
+
+  const orderedBestSellers = topProductIds
+    .map((id) => realBestSellers.find((p) => p.id === id))
+    .filter(Boolean) as typeof realBestSellers;
+
+  const missingCount = 12 - orderedBestSellers.length;
+
+  let extraProducts: typeof realBestSellers = [];
+
+  if (missingCount > 0) {
+    const extraConditions = [eq(productTable.storeId, store.id)];
+
+    if (topProductIds.length > 0) {
+      extraConditions.push(notInArray(productTable.id, topProductIds));
+    }
+
+    extraProducts = await db.query.productTable.findMany({
+      where: and(...extraConditions),
+      orderBy: sql`RANDOM()`,
+      limit: missingCount,
+      with: { variants: true, category: true },
+    });
+  }
+
+  const bestSellers = [...orderedBestSellers, ...extraProducts];
+
+  // ==========================================
+  // 2. NOVOS PRODUTOS (Lançamentos)
+  // ==========================================
+  const newlyCreatedProducts = await db.query.productTable.findMany({
+    where: eq(productTable.storeId, store.id),
+    orderBy: [desc(productTable.createdAt)],
+    limit: 12,
+    with: { variants: true, category: true },
+  });
+
+  // ==========================================
+  // 3. OFERTAS (Menor preço da loja)
+  // ==========================================
+  const allStoreProducts = await db.query.productTable.findMany({
     where: eq(productTable.storeId, store.id),
     with: { variants: true, category: true },
   });
 
-  const newlyCreatedProducts = await db.query.productTable.findMany({
-    where: eq(productTable.storeId, store.id),
-    orderBy: [desc(productTable.createdAt)],
-    with: { variants: true, category: true },
-  });
+  const offersProducts = allStoreProducts
+    .map((product) => {
+      const prices = product.variants.map((v) => v.priceInCents);
+      const lowestPrice = prices.length > 0 ? Math.min(...prices) : Infinity;
+      return { ...product, lowestPrice };
+    })
+    .sort((a, b) => a.lowestPrice - b.lowestPrice)
+    .slice(0, 12);
 
   const categories = await db.query.categoryTable.findMany({
     where: eq(categoryTable.storeId, store.id),
@@ -68,8 +149,19 @@ export default async function Home() {
           </section>
         )}
 
-        <ProductList products={products} title="Mais vendidos" store={store} />
-        <ProductList products={products} title="Ofertas" store={store} />
+        <ProductList
+          products={bestSellers}
+          title="Mais vendidos"
+          store={store}
+        />
+
+        {offersProducts.length > 0 && (
+          <ProductList
+            products={offersProducts}
+            title="Ofertas"
+            store={store}
+          />
+        )}
 
         <section className="mx-auto w-full max-w-7xl px-5 md:hidden">
           <CategorySelector categories={categories} />
