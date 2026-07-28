@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛍️ Bewear - E-commerce SaaS Multi-tenant
 
-## Getting Started
+Uma plataforma completa de e-commerce e SaaS (Software as a Service) multi-tenant construída com tecnologias modernas. O Bewear permite que lojistas criem e gerenciem suas próprias lojas virtuais, catálogos de produtos, estoques e vendas, tudo em um único sistema ágil e robusto.
 
-First, run the development server:
+## 🌐 Conheça a Plataforma
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+O Bewear é um serviço na nuvem totalmente gerenciado, criado para facilitar a vida do lojista. Para criar sua loja, conhecer nossos diferenciais ou acessar o painel administrativo, visite nossa página oficial:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**👉 Acesse:** [bewearshop.com.br](https://bewearshop.com.br)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✨ O que o Bewear oferece?
 
-## Learn More
+### 🏪 Para o Lojista (Painel Admin)
 
-To learn more about Next.js, take a look at the following resources:
+- **Dashboard Inteligente:** Visão geral de receita, total de vendas, produtos ativos e top 5 produtos mais vendidos com base em dados reais.
+- **Gestão de Estoque:** Alertas automáticos de estoque baixo destacados diretamente no painel.
+- **Gestão de Produtos e Variantes:** Cadastro detalhado de produtos com variações de cor, tamanho, precificação inteligente e controle de estoque individual.
+- **Gestão de Categorias:** Geração automática de URLs amigáveis (slugs) para melhor ranqueamento e organização.
+- **Customização da Loja:** Configuração de banners promocionais, identidade visual (cores da marca), taxas de frete fixo/grátis e links diretos para redes sociais (Instagram/WhatsApp).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 🛒 Para o Cliente (Vitrine e Checkout)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Vitrine Dinâmica e Inteligente:**
+  - _Mais Vendidos:_ Calculados automaticamente com base no histórico de pedidos (com fallback dinâmico para novas lojas).
+  - _Ofertas:_ Destaque automático para os produtos com as variantes de menor preço.
+  - _Lançamentos:_ Vitrine atualizada com os itens recém-adicionados.
+- **Experiência do Usuário (UX):** Tratamento moderno de "Empty States" para categorias sem produtos, garantindo uma navegação fluida e sem frustrações.
+- **Checkout Flexível:** Suporte híbrido a pagamentos online automáticos ou modo "Catálogo", permitindo a finalização e negociação direta via WhatsApp.
+- **Notificações:** Envio de e-mails transacionais automáticos, garantindo recibos para o cliente e alertas de novas vendas para o lojista.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Tecnologia sob o capô
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Embora o foco seja a experiência final, o Bewear é construído com o que há de mais moderno, seguro e escalável no ecossistema web atual:
+
+- **Ecossistema:** [Next.js](https://nextjs.org/) (App Router) & [TypeScript](https://www.typescriptlang.org/)
+- **Interface e Estilização:** [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
+- **Banco de Dados & ORM:** PostgreSQL operado via [Drizzle ORM](https://orm.drizzle.team/)
+- **Segurança:** Sistema de sessão e autenticação robusto via [Better Auth](https://better-auth.com/)
+- **Integrações de Pagamento:** Mercado Pago e Stripe
+
+## 🗄️ Arquitetura Multi-tenant
+
+A infraestrutura foi desenhada desde o dia zero para suportar múltiplas lojas de forma isolada e segura. Os dados são estruturados e filtrados pelo `storeId` do lojista, separando de forma estrita o catálogo, logística, carrinho e métricas de vendas entre cada inquilino da plataforma.
+
+---
+
+_Tecnologia por **Bewear** - 2026 © Todos os direitos reservados._
