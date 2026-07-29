@@ -164,7 +164,10 @@ export default async function Home() {
         )}
 
         <section className="mx-auto w-full max-w-7xl px-5 md:hidden">
-          <CategorySelector categories={categories} />
+          <CategorySelector
+            categories={categories}
+            storeColor={store.colorPrimary}
+          />
         </section>
 
         {/* === BANNER SECUNDÁRIO (CARROSSEL 2) === */}
