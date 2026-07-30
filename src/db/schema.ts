@@ -328,3 +328,15 @@ export const notificationTable = pgTable("notification", {
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// --- SAAS: ANNOUNCEMENTS / CHANGELOG ---
+
+export const announcementTable = pgTable("announcement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  type: text("type").default("info").notNull(), // Ex: 'info', 'update', 'maintenance'
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
