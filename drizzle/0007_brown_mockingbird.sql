@@ -1,0 +1,1 @@
+ALTER TABLE "product_variant" ADD COLUMN "compare_at_price_in_cents" integer;

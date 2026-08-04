@@ -9,11 +9,13 @@ import { productVariantTable } from "@/db/schema";
 import { r2 } from "@/lib/r2";
 import { tenantOwnerAction } from "@/lib/safe-action"; // ✅ O Escudo
 
+// ✅ Adicionado o compareAtPriceInCents na tipagem
 interface updateDataProps {
   name: string;
   color: string;
   size: string;
   priceInCents: number;
+  compareAtPriceInCents: number | null;
   stock: number;
   updatedAt: Date;
   imageUrl?: string;
@@ -30,6 +32,8 @@ export const updateVariantAction = tenantOwnerAction<
   const color = formData.get("color") as string;
   const size = formData.get("size") as string;
   const priceInput = formData.get("price") as string;
+  // ✅ Pegando o novo campo de preço de comparação
+  const compareAtPriceInput = formData.get("compareAtPrice") as string | null;
   const stockInput = formData.get("stock") as string;
   const imageFile = formData.get("image") as File | null;
 
@@ -40,6 +44,15 @@ export const updateVariantAction = tenantOwnerAction<
   const priceInCents = Math.round(
     parseFloat(priceInput.replace(",", ".")) * 100,
   );
+
+  // ✅ Convertendo o preço de comparação para centavos (se existir)
+  let compareAtPriceInCents: number | null = null;
+  if (compareAtPriceInput) {
+    compareAtPriceInCents = Math.round(
+      parseFloat(compareAtPriceInput.replace(",", ".")) * 100,
+    );
+  }
+
   const stock = parseInt(stockInput || "0", 10);
 
   const updateData: updateDataProps = {
@@ -47,6 +60,7 @@ export const updateVariantAction = tenantOwnerAction<
     color,
     size,
     priceInCents,
+    compareAtPriceInCents, // ✅ Atualizando o valor (ou resetando para null se foi apagado)
     stock,
     updatedAt: new Date(),
   };
@@ -66,9 +80,6 @@ export const updateVariantAction = tenantOwnerAction<
     updateData.imageUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
   }
 
-  // ⚠️ Importante: Em um sistema 100% blindado, seria ideal verificar
-  // se esta variantId realmente pertence a um productId que pertence ao storeId,
-  // mas por simplicidade e como a interface do admin já barra, vamos manter a query simples.
   await db
     .update(productVariantTable)
     .set(updateData)

@@ -17,16 +17,19 @@ interface Variant {
   size: string;
   stock: number;
   priceInCents: number;
+  compareAtPriceInCents?: number | null;
 }
 
 interface ProductActionsProps {
   variants: Variant[];
-  pixDiscountPercent?: number; // ✅ NOVO: Recebendo a porcentagem do desconto
+  pixDiscountPercent?: number;
+  enableOnlinePayments?: boolean;
 }
 
 const ProductActions = ({
   variants,
   pixDiscountPercent = 0,
+  enableOnlinePayments = false,
 }: ProductActionsProps) => {
   const params = useParams();
   const pathname = usePathname();
@@ -49,19 +52,22 @@ const ProductActions = ({
   const maxStock = currentVariant?.stock || 0;
   const isOutOfStock = maxStock === 0;
 
-  // ✅ Matemática do desconto
   const originalPrice = currentVariant?.priceInCents || 0;
+  const compareAtPrice = currentVariant?.compareAtPriceInCents || 0;
+  const hasComparePrice = compareAtPrice > originalPrice;
+
   const pixPrice =
     pixDiscountPercent > 0
       ? originalPrice - (originalPrice * pixDiscountPercent) / 100
       : originalPrice;
 
+  const showPix = enableOnlinePayments && pixDiscountPercent > 0;
+
   useEffect(() => {
     if (quantity > maxStock && maxStock > 0) {
       setQuantity(maxStock);
-    } else if (isOutOfStock) {
     }
-  }, [currentVariant, maxStock, quantity, isOutOfStock]);
+  }, [currentVariant, maxStock, quantity]);
 
   const handleDecrement = () => {
     setQuantity((prev) => (prev > 1 ? prev - 1 : prev));
@@ -77,12 +83,15 @@ const ProductActions = ({
 
   return (
     <div className="space-y-6">
+      {/* ✅ Bloco de Preços Organizado Verticalmente */}
       <div>
         {currentVariant ? (
-          pixDiscountPercent > 0 ? (
+          showPix ? (
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-lg font-medium line-through">
-                {formatCentsToBRL(originalPrice)}
+                {formatCentsToBRL(
+                  hasComparePrice ? compareAtPrice : originalPrice,
+                )}
               </span>
               <div className="flex items-center gap-3">
                 <p className="text-primary text-4xl font-extrabold">
@@ -97,9 +106,16 @@ const ProductActions = ({
               </p>
             </div>
           ) : (
-            <p className="text-4xl font-bold">
-              {formatCentsToBRL(originalPrice)}
-            </p>
+            <div className="flex flex-col gap-1">
+              {hasComparePrice && (
+                <span className="text-muted-foreground text-lg font-medium line-through">
+                  {formatCentsToBRL(compareAtPrice)}
+                </span>
+              )}
+              <p className="text-primary text-4xl font-extrabold">
+                {formatCentsToBRL(originalPrice)}
+              </p>
+            </div>
           )
         ) : (
           <p className="text-4xl font-bold">R$ --</p>

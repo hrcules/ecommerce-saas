@@ -25,6 +25,7 @@ interface EditVariantDialogProps {
     color: string;
     size: string;
     priceInCents: number;
+    compareAtPriceInCents?: number | null; // ✅ Novo campo adicionado na tipagem
     stock: number;
     imageUrl: string;
   };
@@ -96,9 +97,10 @@ export function EditVariantDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          {/* ✅ Grade atualizada para 3 colunas no desktop */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="price">Preço Específico (R$)</Label>
+              <Label htmlFor="price">Preço Venda (R$)</Label>
               <Input
                 id="price"
                 name="price"
@@ -109,8 +111,29 @@ export function EditVariantDialog({
                 disabled={isPending}
               />
             </div>
+
+            {/* ✅ Novo input de Preço Original (Opcional) */}
             <div className="space-y-2">
-              <Label htmlFor="stock">Quantidade em Estoque</Label>
+              <Label htmlFor="compareAtPrice" className="text-muted-foreground">
+                Preço Original (R$)
+              </Label>
+              <Input
+                id="compareAtPrice"
+                name="compareAtPrice"
+                type="number"
+                step="0.01"
+                placeholder="Opcional"
+                defaultValue={
+                  variant.compareAtPriceInCents
+                    ? (variant.compareAtPriceInCents / 100).toFixed(2)
+                    : ""
+                }
+                disabled={isPending}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="stock">Estoque</Label>
               <Input
                 id="stock"
                 name="stock"

@@ -21,6 +21,8 @@ export const createVariantAction = tenantOwnerAction<
   const color = formData.get("color") as string;
   const size = formData.get("size") as string;
   const priceInput = formData.get("price") as string;
+  // ✅ Pegando o novo campo de preço de comparação
+  const compareAtPriceInput = formData.get("compareAtPrice") as string | null;
   const stockInput = formData.get("stock") as string;
 
   const imageFile = formData.get("image") as File | null;
@@ -49,6 +51,15 @@ export const createVariantAction = tenantOwnerAction<
   const priceInCents = Math.round(
     parseFloat(priceInput.replace(",", ".")) * 100,
   );
+
+  // ✅ Convertendo o preço de comparação para centavos (se existir)
+  let compareAtPriceInCents: number | null = null;
+  if (compareAtPriceInput) {
+    compareAtPriceInCents = Math.round(
+      parseFloat(compareAtPriceInput.replace(",", ".")) * 100,
+    );
+  }
+
   const variantSlug =
     `${parentProduct.slug}-${color.toLowerCase()}-${size.toLowerCase()}`.replace(
       /[^a-z0-9]+/g,
@@ -94,6 +105,7 @@ export const createVariantAction = tenantOwnerAction<
     color,
     size,
     priceInCents,
+    compareAtPriceInCents,
     stock: parseInt(stockInput || "0"),
     imageUrl,
     slug: variantSlug,

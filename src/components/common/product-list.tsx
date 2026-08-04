@@ -1,9 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
 import { useRef } from "react";
-import { useParams, usePathname } from "next/navigation";
 
 import {
   categoryTable,
@@ -22,19 +20,11 @@ interface ProductListProps {
   })[];
   store?: {
     pixDiscountPercent: number;
+    readonly enableOnlinePayments: boolean;
   };
 }
 
 const ProductList = ({ title, products, store }: ProductListProps) => {
-  const params = useParams();
-  const pathname = usePathname();
-  const storeSlug = params.storeSlug as string;
-
-  const basePath =
-    storeSlug && pathname.startsWith(`/store/${storeSlug}`)
-      ? `/store/${storeSlug}`
-      : "";
-
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollLeft = () => {
@@ -100,6 +90,7 @@ const ProductList = ({ title, products, store }: ProductListProps) => {
               key={product.id}
               className="max-w-[160px] min-w-[160px] snap-start md:max-w-[280px] md:min-w-[280px]"
               textContainerClassName="w-full"
+              enableOnlinePayments={store?.enableOnlinePayments}
             />
           ))}
         </div>
@@ -119,6 +110,7 @@ const ProductGrid = ({ title, products, store }: ProductListProps) => {
             product={product}
             textContainerClassName="w-full max-w-none"
             pixDiscountPercent={store?.pixDiscountPercent}
+            enableOnlinePayments={store?.enableOnlinePayments}
           />
         ))}
       </div>
