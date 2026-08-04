@@ -80,9 +80,6 @@ const ProductPage = async ({ params }: ProductPageProps) => {
                 <p className="text-muted-foreground text-sm md:text-base">
                   {productVariant.name}
                 </p>
-                {/* <p className="mt-2 text-xl font-bold md:text-2xl">
-                  {formatCentsToBRL(productVariant.priceInCents)}
-                </p> */}
               </div>
 
               <div className="flex flex-col gap-3">
@@ -93,11 +90,13 @@ const ProductPage = async ({ params }: ProductPageProps) => {
                 />
               </div>
 
+              {/* ✅ Passando corretamente as regras e o estado da loja */}
               <ProductActions
                 variants={productVariant.product.variants.filter(
                   (v) => v.color === productVariant.color,
                 )}
                 pixDiscountPercent={store.pixDiscountPercent}
+                enableOnlinePayments={store.enableOnlinePayments}
               />
 
               <div className="mt-2 flex flex-col">

@@ -171,7 +171,13 @@ export const productVariantTable = pgTable("product_variant", {
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   color: text("color").notNull(),
+
+  // Preço atual de venda (O valor que o cliente efetivamente paga)
   priceInCents: integer("price_in_cents").notNull(),
+
+  // NOVO: Preço Original/De Comparação (Opcional)
+  compareAtPriceInCents: integer("compare_at_price_in_cents"),
+
   imageUrl: text("image_url").notNull(),
   productId: uuid("product_id")
     .notNull()

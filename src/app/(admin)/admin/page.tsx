@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, desc } from "drizzle-orm"; // Adicionado 'desc'
+import { and, eq, gte, lte, desc } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -8,8 +8,6 @@ import {
   Package,
   ShoppingBag,
   ArrowRight,
-  Megaphone, // Ícone para atualizações
-  Info, // Ícone para informações
 } from "lucide-react";
 
 import { db } from "@/db";
@@ -18,7 +16,7 @@ import {
   productTable,
   storeTable,
   announcementTable,
-} from "@/db/schema"; // Adicionado announcementTable
+} from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { formatCentsToBRL } from "@/helpers/money";
 
@@ -33,6 +31,8 @@ import { Button } from "@/components/ui/button";
 
 import DashboardFilter from "./components/dashboard-filter";
 import { getTenantStore } from "@/lib/tentat";
+// ✅ Importe o novo componente (ajuste o caminho se necessário)
+import { ChangelogAlert } from "./components/changelog-alert";
 
 interface AdminDashboardPageProps {
   searchParams: Promise<{
@@ -175,43 +175,17 @@ export default async function AdminDashboardPage({
         <DashboardFilter />
       </div>
 
+      {/* ✅ RENDEREZAÇÃO LIMPA DO COMPONENTE DE ANÚNCIOS */}
       {activeAnnouncements.length > 0 && (
         <div className="space-y-3">
-          {activeAnnouncements.map((announcement) => {
-            let bannerStyles =
-              "bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-200";
-            let Icon = Info;
-            let iconColor = "text-blue-600 dark:text-blue-400";
-
-            if (announcement.type === "update") {
-              bannerStyles =
-                "bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/30 dark:border-emerald-900/50 dark:text-emerald-200";
-              Icon = Megaphone;
-              iconColor = "text-emerald-600 dark:text-emerald-400";
-            } else if (announcement.type === "maintenance") {
-              bannerStyles =
-                "bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/30 dark:border-amber-900/50 dark:text-amber-200";
-              Icon = AlertTriangle;
-              iconColor = "text-amber-600 dark:text-amber-400";
-            }
-
-            return (
-              <div
-                key={announcement.id}
-                className={`flex items-start gap-4 rounded-lg border p-4 shadow-sm transition-all ${bannerStyles}`}
-              >
-                <Icon className={`mt-0.5 h-5 w-5 flex-shrink-0 ${iconColor}`} />
-                <div className="flex flex-col gap-1">
-                  <h3 className="leading-none font-semibold tracking-tight">
-                    {announcement.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed opacity-90">
-                    {announcement.content}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+          {activeAnnouncements.map((announcement) => (
+            <ChangelogAlert
+              key={announcement.id}
+              title={announcement.title}
+              content={announcement.content}
+              type={announcement.type}
+            />
+          ))}
         </div>
       )}
 

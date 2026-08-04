@@ -12,15 +12,20 @@ import type {
 import { formatCentsToBRL } from "@/helpers/money";
 import { cn } from "@/lib/utils";
 
+// ✅ Atualizamos a tipagem para incluir o preço original
+type ProductVariant = typeof productVariantTable.$inferSelect & {
+  compareAtPriceInCents?: number | null;
+};
+
 interface ProductItemProps {
   product: typeof productTable.$inferSelect & {
-    variants: (typeof productVariantTable.$inferSelect)[];
+    variants: ProductVariant[];
     category: typeof categoryTable.$inferSelect;
   };
-
   textContainerClassName?: string;
   className?: string;
-  pixDiscountPercent?: number; // ✅ NOVO: Recebendo a porcentagem do desconto
+  pixDiscountPercent?: number;
+  enableOnlinePayments?: boolean; // ✅ NOVO
 }
 
 const ProductItem = ({
@@ -28,6 +33,7 @@ const ProductItem = ({
   textContainerClassName,
   className,
   pixDiscountPercent = 0,
+  enableOnlinePayments = false,
 }: ProductItemProps) => {
   const params = useParams();
   const pathname = usePathname();
@@ -42,12 +48,17 @@ const ProductItem = ({
 
   if (!firstVariant) return null;
 
-  // ✅ Matemática do desconto
   const originalPrice = firstVariant.priceInCents;
+  const compareAtPrice = firstVariant.compareAtPriceInCents;
+  const hasPromo = compareAtPrice && compareAtPrice > originalPrice;
+
   const pixPrice =
     pixDiscountPercent > 0
       ? originalPrice - (originalPrice * pixDiscountPercent) / 100
       : originalPrice;
+
+  // ✅ Só mostra o PIX se pagamentos online estiverem ativos
+  const showPixDiscount = enableOnlinePayments && pixDiscountPercent > 0;
 
   return (
     <Link
@@ -78,21 +89,26 @@ const ProductItem = ({
           {product.description}
         </p>
 
-        {pixDiscountPercent > 0 ? (
-          <div className="mt-0.5 flex flex-col">
+        <div className="mt-0.5 flex flex-col">
+          {/* ✅ 1. Mostra o valor riscado (se estiver em promoção) */}
+          {hasPromo && (
             <span className="text-muted-foreground text-xs line-through">
-              {formatCentsToBRL(originalPrice)}
+              {formatCentsToBRL(compareAtPrice)}
             </span>
-            <p className="text-primary truncate text-lg font-extrabold md:text-xl">
-              {formatCentsToBRL(pixPrice)}{" "}
-              <span className="text-xs font-bold">no PIX</span>
-            </p>
-          </div>
-        ) : (
-          <p className="text-primary mt-0.5 truncate text-lg font-extrabold md:text-xl">
+          )}
+
+          {/* ✅ 2. Mostra o preço oficial de venda */}
+          <p className="text-primary truncate text-lg font-extrabold md:text-xl">
             {formatCentsToBRL(originalPrice)}
           </p>
-        )}
+
+          {/* ✅ 3. Mostra o atrativo do PIX (se habilitado) */}
+          {showPixDiscount && (
+            <span className="mt-0.5 text-xs font-bold text-emerald-600">
+              ou {formatCentsToBRL(pixPrice)} no PIX
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   );
